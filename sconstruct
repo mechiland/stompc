@@ -1,0 +1,8 @@
+Default('build')
+
+VariantDir('build', 'src', duplicate=0)
+Program('build/stompc', Glob('build/*.c'))    
+Alias('build', 'build/stompc')
+
+Command('clean', '', 'rm -Rf build')
+
