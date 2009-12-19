@@ -26,3 +26,4 @@ clean:
 %.o: %.c
 	@echo "compiling $< ..."
 	@$(CC) $(CFLAGS) -c $< -o $@ 
+
