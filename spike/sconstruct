@@ -1,0 +1,2 @@
+Program("client", ["client.c", "error_handle.c"])
+Program("server", ["server.c", "error_handle.c"])
