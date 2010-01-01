@@ -1,7 +1,6 @@
-#include <stdio.h>
+#include "server.h"
 
 int main(int argc, char** argv) {
-    printf("Hello, stompc!\n");         
-
-	return 0;
+    server_listen();
+    return 0;
 }
