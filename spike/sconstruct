@@ -1,4 +1,0 @@
-Program("client", ["client.c", "error_handle.c", "delimiter_frame.c"])
-Program("server", ["server.c", "error_handle.c", "delimiter_frame.c"])
-Program("testsize", ["test_size.c"]) 
-Program("sigaction", ["sig_action.c", "error_handle.c"])
