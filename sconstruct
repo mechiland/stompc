@@ -1,8 +1,14 @@
-Default('build')
+import os
+                      
+app_name = 'stompc'
+build_path = 'build'
+app_path = build_path + '/app'
 
-VariantDir('build', 'src', duplicate=0)
-Program('build/stompc', Glob('build/*.c'))    
-Alias('build', 'build/stompc')
+VariantDir(app_path, 'src')   
+app = Program(os.path.join(app_path, app_name), Glob(app_path + '/*.c'))    
+Alias('build', app)
 
-Command('clean', '', 'rm -Rf build')
+clean = Command('clean', '', 'rm -Rf ' + build_path) 
+AlwaysBuild(clean)
 
+Default(app)

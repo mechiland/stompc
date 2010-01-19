@@ -1,1 +1,4 @@
-.sconsign.dblite*.[oa]	stompc.exe
+.sconsign.dblite
+*.[oa]	
+build/
+spike/
