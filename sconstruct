@@ -2,13 +2,14 @@ app_name = 'stompc'
 ut_name = 'ut'                
 lib_ut_path = 'vendor/UnitTest++'
 
-app = Program('src/' + app_name, Glob('src/*.c'))    
+app_objs = Object(Glob('src/*.c'))
+app = Program('src/' + app_name, app_objs)    
 Alias('build', app)                                 
 
 test_env = Environment()
 test_env.Append(CPPPATH = [lib_ut_path + '/include']) 
 test_env.Append(LIBPATH = [lib_ut_path])
 test_env.Append(LIBS = 'libUnitTest++') 
-ut = test_env.Program('ut/' + ut_name, Glob('ut/*.cpp'))
+ut = test_env.Program('ut/' + ut_name, [Glob('ut/*.cpp'), 'src/stomp_frame.o'])
 
 Default(app, ut)
