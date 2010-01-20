@@ -1,2 +1,2 @@
-scons -Q
-./ft/test_connection ./build/app/stompc
+scons -Q build
+./ft/test_connection ./src/stompc

@@ -1,14 +1,14 @@
-import os
-                      
-app_name = 'stompc'
-build_path = 'build'
-app_path = build_path + '/app'
+app_name = 'stompc'               
+ut_name = 'ut'                
+lib_ut_path = 'vendor/UnitTest++'
 
-VariantDir(app_path, 'src')   
-app = Program(os.path.join(app_path, app_name), Glob(app_path + '/*.c'))    
-Alias('build', app)
+app = Program('src/' + app_name, Glob('src/*.c'))    
+Alias('build', app)                                 
 
-clean = Command('clean', '', 'rm -Rf ' + build_path) 
-AlwaysBuild(clean)
+test_env = Environment()
+test_env.Append(CPPPATH = [lib_ut_path + '/include']) 
+test_env.Append(LIBPATH = [lib_ut_path])
+test_env.Append(LIBS = 'libUnitTest++') 
+ut = test_env.Program('ut/' + ut_name, Glob('ut/*.cpp'))
 
-Default(app)
+Default(app, ut)
