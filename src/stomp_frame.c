@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include "stomp_frame.h"
 
+struct _stomp_frame {
+	char *verb;
+	char *body;
+};
 
 static int is_valid_frame(int frame_end, int header_end, int verb_end);
 	
@@ -55,7 +59,17 @@ stomp_frame *stomp_frame_create(char *buf, int size)
 
 static int is_valid_frame(int frame_end, int header_end, int verb_end) {
 	return frame_end >= 0 && header_end >= 0 && verb_end >= 0;
-}     
+}   
+
+char *stomp_frame_get_verb(stomp_frame *f)
+{
+	return f->verb;
+}   
+
+char *stomp_frame_get_body(stomp_frame *f) 
+{
+	return f->body;
+}
 
 char *stomp_frame_serialize(stomp_frame *f, int *size)
 {

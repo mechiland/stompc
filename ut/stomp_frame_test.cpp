@@ -34,8 +34,8 @@ TEST(should_return_frame_if_buf_contain_valid_stomp_frame)
 	char *data = "CONNECT\n\naaa\0";                           	
 	stomp_frame *f = create_frame(data, strlen(data) + 1);
 	
-	CHECK_EQUAL("CONNECT", f->verb);
-	CHECK_EQUAL("aaa", f->body);                
+	CHECK_EQUAL("CONNECT", stomp_frame_get_verb(f));
+	CHECK_EQUAL("aaa", stomp_frame_get_body(f));                
 
 	stomp_frame_free(f);   	
 }
