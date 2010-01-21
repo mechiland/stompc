@@ -7,7 +7,7 @@
 extern "C" { 
 #endif
 
-stomp_frame stomp_process(stomp_frame f);
+stomp_frame *stomp_process(stomp_frame *f);
       
 #ifdef __cplusplus 
 } 

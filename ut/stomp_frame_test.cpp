@@ -1,7 +1,7 @@
 #include <UnitTest++.h> 
 #include "../src/stomp_frame.h"    
 
-stomp_frame create_frame(char *data, int size);
+stomp_frame *create_frame(char *data, int size);
 void check_null_frame(char *data, int size);
 
 TEST(should_return_null_if_buf_is_empty)
@@ -32,25 +32,25 @@ TEST(should_return_null_if_buf_is_not_valid_stomp_frame)
 TEST(should_return_frame_if_buf_contain_valid_stomp_frame)
 {                                                        
 	char *data = "CONNECT\n\naaa\0";                           	
-	stomp_frame f = create_frame(data, strlen(data) + 1);
+	stomp_frame *f = create_frame(data, strlen(data) + 1);
 	
 	CHECK_EQUAL("CONNECT", f->verb);
 	CHECK_EQUAL("aaa", f->body);                
 
-	stomp_frame_destroy(f);   	
+	stomp_frame_free(f);   	
 }
 
 void check_null_frame(char *data, int size)
 {
-	CHECK_EQUAL((stomp_frame)NULL, create_frame(data, size));                 
+	CHECK_EQUAL((stomp_frame *)NULL, create_frame(data, size));                 
 }
 
-stomp_frame create_frame(char *data, int size) 
+stomp_frame *create_frame(char *data, int size) 
 {
 	uint8_t *b = (uint8_t *)malloc(size * sizeof(*b));
 	memcpy(b, data, size);
 
-	stomp_frame f = stomp_frame_create(b, size);
+	stomp_frame *f = stomp_frame_create(b, size);
 	free(b);	                                
 
 	return f;

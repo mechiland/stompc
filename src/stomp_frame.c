@@ -7,7 +7,7 @@
 
 static int is_valid_frame(int frame_end, int header_end, int verb_end);
 	
-stomp_frame stomp_frame_create(uint8_t *buf, int size)
+stomp_frame *stomp_frame_create(uint8_t *buf, int size)
 {   
 	int frame_end = -1;   
 	int header_end = -1;
@@ -39,7 +39,7 @@ stomp_frame stomp_frame_create(uint8_t *buf, int size)
 		return NULL;
 	}
 	     
-	stomp_frame f = malloc(sizeof(*f));
+	stomp_frame *f = malloc(sizeof(*f));
 	f->verb = malloc((verb_end + 1) * sizeof(char));
 	memcpy(f->verb, buf, verb_end);
 	f->verb[verb_end] = 0;
@@ -57,12 +57,12 @@ static int is_valid_frame(int frame_end, int header_end, int verb_end) {
 	return frame_end >= 0 && header_end >= 0 && verb_end >= 0;
 }     
 
-uint8_t *stomp_frame_serialize(stomp_frame f, int *size)
+uint8_t *stomp_frame_serialize(stomp_frame *f, int *size)
 {
 	return NULL;
 }
 
-void stomp_frame_destroy(stomp_frame f) 
+void stomp_frame_free(stomp_frame *f) 
 {                                   
 	free(f->verb);
 	free(f->body);
