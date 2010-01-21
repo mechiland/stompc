@@ -8,14 +8,15 @@
 extern "C" { 
 #endif
 
-struct _frame {
-	uint8_t *content;
-	int size;
+struct _stomp_frame {
+	char *verb;
+	char *body;
 };
-typedef struct _frame *frame;
+typedef struct _stomp_frame *stomp_frame;
 
-frame stomp_frame_create(uint8_t *buf, int size);
-void stomp_frame_destroy(frame f);
+stomp_frame stomp_frame_create(uint8_t *buf, int size);
+void stomp_frame_destroy(stomp_frame f);
+uint8_t *stomp_frame_serialize(stomp_frame f, int *size);
 
 
 #ifdef __cplusplus 
