@@ -47,12 +47,7 @@ void check_null_frame(char *data, int size)
 
 stomp_frame *create_frame(char *data, int size) 
 {
-	uint8_t *b = (uint8_t *)malloc(size * sizeof(*b));
-	memcpy(b, data, size);
-
-	stomp_frame *f = stomp_frame_create(b, size);
-	free(b);	                                
-
+	stomp_frame *f = stomp_frame_create(data, size);
 	return f;
 }                  
 

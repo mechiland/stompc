@@ -27,7 +27,7 @@ int start_server()
 }    
 
 void handle_tcp_client(int clientSock) {  
-	uint8_t buf[BUFSIZE];
+	char buf[BUFSIZE];
 
 	for (;;) {    
 		int bytes_recv = recv(clientSock, buf, BUFSIZE, 0);
@@ -38,11 +38,12 @@ void handle_tcp_client(int clientSock) {
 		stomp_frame *response_frame = stomp_process(f); 
 
 		int response_size;
-		uint8_t *response_content = stomp_frame_serialize(response_frame, &response_size);
+		char *response_content = stomp_frame_serialize(response_frame, &response_size);
 		if (send(clientSock, response_content, response_size, 0) != response_size) {
 			perror("send frame data failed");
 		}                                                                     
-
+            
+		free(response_content);
 		stomp_frame_free(f);
 		stomp_frame_free(response_frame);
 	}

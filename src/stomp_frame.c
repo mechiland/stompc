@@ -7,7 +7,7 @@
 
 static int is_valid_frame(int frame_end, int header_end, int verb_end);
 	
-stomp_frame *stomp_frame_create(uint8_t *buf, int size)
+stomp_frame *stomp_frame_create(char *buf, int size)
 {   
 	int frame_end = -1;   
 	int header_end = -1;
@@ -15,7 +15,7 @@ stomp_frame *stomp_frame_create(uint8_t *buf, int size)
 	int line_end = -1;
 	int line_count = 0;
 	int i = 0;
-	uint8_t next_char;
+	char next_char;
 	while (i < size) {
 		next_char = buf[i];
 		if (next_char == '\0') {
@@ -57,7 +57,7 @@ static int is_valid_frame(int frame_end, int header_end, int verb_end) {
 	return frame_end >= 0 && header_end >= 0 && verb_end >= 0;
 }     
 
-uint8_t *stomp_frame_serialize(stomp_frame *f, int *size)
+char *stomp_frame_serialize(stomp_frame *f, int *size)
 {
 	return NULL;
 }
