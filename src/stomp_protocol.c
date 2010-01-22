@@ -2,6 +2,12 @@
 #include "stomp_protocol.h"
 
 stomp_frame *stomp_process(stomp_frame *f)
-{
-	return NULL;
+{       
+	stomp_frame *rf = NULL;    
+	if(!strcmp(stomp_frame_get_verb(f), "CONNECT"))
+	{
+		rf = stomp_frame_create("CONNECTED", "");
+	} 
+	
+	return rf;
 }

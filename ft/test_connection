@@ -11,7 +11,7 @@ expect_after {
 	eof {puts "\neof\nTest Failed"; exit -1}
 }
 
-send "hello, world\0"
-expect "hello, world"
+send "CONNECT\n\n\0\n"
+expect "CONNECTED"
 
 puts "\nTest Successful!"                               

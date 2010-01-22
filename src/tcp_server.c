@@ -29,23 +29,39 @@ int start_server()
 void handle_tcp_client(int clientSock) {  
 	char buf[BUFSIZE];
 
-	for (;;) {    
-		int bytes_recv = recv(clientSock, buf, BUFSIZE, 0);
-		if (bytes_recv < 0)
-			continue;
-
-		stomp_frame *f = stomp_frame_create(buf, bytes_recv); 
-		stomp_frame *response_frame = stomp_process(f); 
-
-		int response_size;
-		char *response_content = stomp_frame_serialize(response_frame, &response_size);
-		if (send(clientSock, response_content, response_size, 0) != response_size) {
-			perror("send frame data failed");
-		}                                                                     
+	for (;;) {
+		int i = 0;
+		int bytes_recv, total_bytes_recv = 0;
+		                                  
+		while(i < 3) {
+			bytes_recv = recv(clientSock, buf + total_bytes_recv, BUFSIZE - total_bytes_recv, 0);
+			if (bytes_recv <=0)
+				break;
+				                              
+			total_bytes_recv += bytes_recv;
+			i++;
+		}            
+		
+		if (total_bytes_recv < 0)
+			continue;                                           
+			                                                                
+		stomp_frame *f = stomp_frame_parse(buf, total_bytes_recv); 
+		if (f == NULL) 
+			continue; 
+		            			
+		stomp_frame *rf = stomp_process(f);
+		
+		if (rf) {
+			scs *s = stomp_frame_serialize(rf); 
+                     
+			if (send(clientSock, scs_get_content(s), scs_get_size(s), 0) != scs_get_size(s)) {
+				perror("send frame data failed");
+			}                                                                     
+			scs_free(s);
+			stomp_frame_free(rf);
+		} 
             
-		free(response_content);
 		stomp_frame_free(f);
-		stomp_frame_free(response_frame);
 	}
 }                          
 

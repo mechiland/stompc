@@ -1,5 +1,6 @@
 #include <UnitTest++.h> 
 #include "../src/stomp_frame.h"    
+#include "../src/scs.h"    
 
 stomp_frame *create_frame(char *data, int size);
 void check_null_frame(char *data, int size);
@@ -47,7 +48,34 @@ void check_null_frame(char *data, int size)
 
 stomp_frame *create_frame(char *data, int size) 
 {
-	stomp_frame *f = stomp_frame_create(data, size);
+	stomp_frame *f = stomp_frame_parse(data, size);
 	return f;
 }                  
 
+TEST(should_return_serialized_frame)
+{
+	stomp_frame *f = stomp_frame_create("verb", "body");
+	scs *s = stomp_frame_serialize(f);   
+		                        
+	char *expected_str = "verb\n\nbody\0";
+	
+	CHECK_EQUAL(expected_str, scs_get_content(s));
+	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));
+		
+	scs_free(s);
+	stomp_frame_free(f);
+}
+
+TEST(should_return_serialized_frame_when_body_is_empty)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	scs *s = stomp_frame_serialize(f);   
+		                        
+	char *expected_str = "verb\n\n\0";
+	
+	CHECK_EQUAL(expected_str, scs_get_content(s));
+	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));
+		
+	scs_free(s);
+	stomp_frame_free(f);
+}

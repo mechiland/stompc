@@ -10,8 +10,19 @@ struct _stomp_frame {
 };
 
 static int is_valid_frame(int frame_end, int header_end, int verb_end);
+
+stomp_frame *stomp_frame_create(const char *verb, const char *body)
+{              
+	stomp_frame *f = malloc(sizeof(*f));                
+	f->verb = malloc((strlen(verb) + 1) * sizeof(char));
+	strcpy(f->verb, verb);
+	f->body = malloc((strlen(body) + 1) * sizeof(char));
+	strcpy(f->body, body);
 	
-stomp_frame *stomp_frame_create(char *buf, int size)
+	return f;
+}	
+
+stomp_frame *stomp_frame_parse(char *buf, int size)
 {   
 	int frame_end = -1;   
 	int header_end = -1;
@@ -71,9 +82,13 @@ char *stomp_frame_get_body(stomp_frame *f)
 	return f->body;
 }
 
-char *stomp_frame_serialize(stomp_frame *f, int *size)
-{
-	return NULL;
+scs *stomp_frame_serialize(stomp_frame *f)
+{               
+	scs *s = scs_create(f->verb);
+	scs_append(s, "\n\n");
+	scs_append(s, f->body);
+	scs_nappend(s, "\0", 1);
+	return s;
 }
 
 void stomp_frame_free(stomp_frame *f) 
@@ -81,4 +96,14 @@ void stomp_frame_free(stomp_frame *f)
 	free(f->verb);
 	free(f->body);
 	free(f);
+}
+
+char *get_verb(stomp_frame *f)
+{
+	return f->verb;
+}
+
+char *get_body(stomp_frame *f)
+{
+	return f->body;
 }
