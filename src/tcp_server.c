@@ -22,7 +22,7 @@ static void set_non_blocking(int sock);
 static void set_file_descriptors(fd_set *socks);
 
 static int send_data(int sock, char *buf, int size);
-static void close_socket(int sock);
+static void close_client_socket(int sock);
 
 static int sock;
 int connections[FD_SETSIZE];
@@ -32,7 +32,7 @@ static stomp *stomp_machine;
 static void handle_fatal_error(const char* message)
 {
 	die_with_system_message(message);
-	close_socket(sock);	
+	close(sock);	
 }   
 
 static void	set_reuse_addr()
@@ -43,8 +43,8 @@ static void	set_reuse_addr()
 
 static void interrupt_handler(int sig) 
 {
-	puts("Shutting down server, stop listening.");
-	close_socket(sock);
+	puts("Shutting down server, stop listening."); // TODO: we need better way to handle logs
+	close(sock);
 }   
 
 static void set_interrupt_handler() 
@@ -128,7 +128,7 @@ void start_server()
          
 		int i;
 		for(i = 0; i < connection_num; ++i)	{
-			if (connections[i] >= 0) {
+			if (connections[i] >= 0) { //TODO: need better way to remove a sock from the array
 				printf("Handling new client data\n");
 				if (FD_ISSET(connections[i], &socks)) {
 					handle_tcp_client(connections[i]);
@@ -144,7 +144,7 @@ static void set_file_descriptors(fd_set *socks)
 	FD_SET(sock, socks); 
 	int i;
 	for(i = 0; i < connection_num; ++i) {
-		if (connections[i] >= 0) {
+		if (connections[i] >= 0) { //TODO: need better way to remove a sock from the array
 			FD_SET(connections[i], socks);			
 		}
 	}		
@@ -162,8 +162,9 @@ static void handle_new_connection(fd_set *socks)
 		
 	connections[connection_num++] = client_sock; 
 	set_non_blocking(client_sock);  
-	
-	stomp_machine = stomp_create(client_sock, send_data, close_socket);
+	                                          
+	// TODO: to handle multiple clients same time, we need store all stomp machines
+	stomp_machine = stomp_create(client_sock, send_data, close_client_socket);
 }
 
 static void handle_tcp_client(int client_sock) 
@@ -197,13 +198,13 @@ static int send_data(int sock, char *buf, int size)
 	return size;                            
 }            
 
-static void close_socket(int sock)
+static void close_client_socket(int sock)
 {
 	close(sock);
 	int i;
 	for(i = 0; i < connection_num; ++i) {
 		if (connections[i] == sock) {
-			connections[i] = -1;
+			connections[i] = -1; //TODO: need better way to remove a sock from the array
 		}
 	}		
 }
