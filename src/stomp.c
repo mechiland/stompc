@@ -28,7 +28,7 @@ void stomp_receive(stomp *stp, char *buf, int size)
 		return; 
 	} 
     
-	stomp_frame *rf = stomp_proto_process(f);
+	stomp_frame *rf = stomp_proto_process(stp, f);
 
 	if (rf) {
 		scs *s = stomp_frame_serialize(rf); 
@@ -41,4 +41,11 @@ void stomp_receive(stomp *stp, char *buf, int size)
 
 	stomp_frame_free(f); 
 	scs_clear(stp->buffer);
+}
+
+void stomp_close_connection(stomp *stp)
+{
+	stp->close_handler(stp->sock);
+	scs_free(stp->buffer);
+	free(stp);
 }

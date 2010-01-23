@@ -7,17 +7,26 @@ proc shut_down_server {server} {
        
 set timeout 2
 
-eval spawn [lrange $argv 0 end]; set server $spawn_id
-spawn nc localhost 61613; set client $spawn_id       
-
 expect_after {
 	-i $any_spawn_id 
 	timeout {puts "\ntimeout\nTest Failed"; shut_down_server $server; exit -1}
 	eof {puts "\neof\nTest Failed"; exit -1}
 }
 
-send "CONNECT\n\n\0\n"
-expect "CONNECTED"   
+eval spawn [lrange $argv 0 end]; set server $spawn_id
 
+proc test_connection {} { 
+	upvar spawn_id spawn_id
+	spawn nc localhost 61613
+	
+	send "CONNECT\n\n\0\n"
+	expect "CONNECTED"   
+
+	send "DISCONNECT\n\n\0\n"                            	
+}              
+
+test_connection
+test_connection
+test_connection
 
 puts "\nTest Successful!"                               

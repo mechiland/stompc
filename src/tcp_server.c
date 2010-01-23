@@ -128,9 +128,11 @@ void start_server()
          
 		int i;
 		for(i = 0; i < connection_num; ++i)	{
-			printf("Handling new client data\n");
-			if (FD_ISSET(connections[i], &socks)) {
-				handle_tcp_client(connections[i]);
+			if (connections[i] >= 0) {
+				printf("Handling new client data\n");
+				if (FD_ISSET(connections[i], &socks)) {
+					handle_tcp_client(connections[i]);
+				}                         
 			}
 		}       		
 	}
@@ -142,7 +144,9 @@ static void set_file_descriptors(fd_set *socks)
 	FD_SET(sock, socks); 
 	int i;
 	for(i = 0; i < connection_num; ++i) {
-		FD_SET(connections[i], socks);
+		if (connections[i] >= 0) {
+			FD_SET(connections[i], socks);			
+		}
 	}		
 
 }
@@ -196,4 +200,10 @@ static int send_data(int sock, char *buf, int size)
 static void close_socket(int sock)
 {
 	close(sock);
+	int i;
+	for(i = 0; i < connection_num; ++i) {
+		if (connections[i] == sock) {
+			connections[i] = -1;
+		}
+	}		
 }
