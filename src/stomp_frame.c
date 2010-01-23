@@ -22,8 +22,11 @@ stomp_frame *stomp_frame_create(const char *verb, const char *body)
 	return f;
 }	
 
-stomp_frame *stomp_frame_parse(char *buf, int size)
-{   
+stomp_frame *stomp_frame_parse(scs *s)
+{             
+	char *buf = scs_get_content(s);
+	int size = scs_get_size(s);
+	
 	int frame_end = -1;   
 	int header_end = -1;
 	int verb_end = -1; 

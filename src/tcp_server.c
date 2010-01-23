@@ -8,23 +8,31 @@
 #include <stdio.h>
 #include <sys/select.h>
 #include "tcp_server.h"
-#include "stomp_protocol.h"
+#include "stomp.h"                        
 
-static void handle_new_connection(fd_set *socks, int *connections, int *connection_num);
-static void handle_tcp_client(int clntSocket);
+static void create_server_sock_and_listen();
+static void handle_new_connection(fd_set *socks);
+static void handle_tcp_client(int client_socket);
 static void interrupt_handler(int sig); 
 static void handle_fatal_error(const char* message);
 
 static void	set_reuse_addr();
 static void set_interrupt_handler(); 
-static void set_non_blocking();
+static void set_non_blocking(int sock); 
+static void set_file_descriptors(fd_set *socks);
+
+static int send_data(int sock, char *buf, int size);
+static void close_socket(int sock);
 
 static int sock;
+int connections[FD_SETSIZE];
+int connection_num = 0;
+static stomp *stomp_machine;
 
 static void handle_fatal_error(const char* message)
 {
 	die_with_system_message(message);
-	close(sock);	
+	close_socket(sock);	
 }   
 
 static void	set_reuse_addr()
@@ -36,7 +44,7 @@ static void	set_reuse_addr()
 static void interrupt_handler(int sig) 
 {
 	puts("Shutting down server, stop listening.");
-	close(sock);
+	close_socket(sock);
 }   
 
 static void set_interrupt_handler() 
@@ -55,7 +63,7 @@ static void set_interrupt_handler()
 	}	
 }
 
-static void set_non_blocking() {
+static void set_non_blocking(int sock) {
 	int opts;
 	opts = fcntl(sock, F_GETFL);
 	if (opts < 0) {
@@ -65,14 +73,16 @@ static void set_non_blocking() {
 	if (fcntl(sock, F_SETFL, opts) < 0) {
 		handle_fatal_error("set socket nonblocking failed"); 
 	}
-}
+}   
 
-void start_server()
+static void create_server_sock_and_listen()
 {
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock < 0) {
 		handle_fatal_error("socket() failed"); 
 	} 
+	set_reuse_addr();
+	set_non_blocking(sock);	
 
 	struct sockaddr_in servAddr; 
 	memset(&servAddr, 0, sizeof(servAddr)); 
@@ -86,30 +96,22 @@ void start_server()
 
 	if (listen(sock, MAXPENDING) < 0) {
 		handle_fatal_error("listen() failed");
-	}
+	}	
+}                           
 
+void start_server()
+{                           
+	create_server_sock_and_listen();
 	set_interrupt_handler();
-	set_reuse_addr();
-	set_non_blocking();	
 
-	int connections[FD_SETSIZE];
-	int connection_num = 0;
-	fd_set socks;
-	struct timeval timeout;
-	timeout.tv_sec = 5;
-	timeout.tv_usec = 0;
-
-	printf("Start the loop\n"); 
-	printf("Server sock: %d\n", sock); 
-	printf("Maximum sock num: %d\n", FD_SETSIZE); 
 	for(;;) {
-		FD_ZERO(&socks);
-		FD_SET(sock, &socks); 
-		int i;
-		for(i = 0; i < connection_num; ++i) {
-			FD_SET(connections[i], &socks);
-		}		
+		fd_set socks;
+		set_file_descriptors(&socks);
 
+		struct timeval timeout;
+		timeout.tv_sec = 5;
+		timeout.tv_usec = 0;
+		
 		int read_ready_socks = select(FD_SETSIZE, &socks, NULL, NULL, &timeout); 
 
 		if (read_ready_socks < 0) {
@@ -121,9 +123,10 @@ void start_server()
 
 		if (FD_ISSET(sock, &socks)) { 
 			printf("Handling new client connection\n");
-			handle_new_connection(&socks, connections, &connection_num);
+			handle_new_connection(&socks);
 		}                    
-
+         
+		int i;
 		for(i = 0; i < connection_num; ++i)	{
 			printf("Handling new client data\n");
 			if (FD_ISSET(connections[i], &socks)) {
@@ -131,29 +134,43 @@ void start_server()
 			}
 		}       		
 	}
-}    
+}      
 
-static void handle_new_connection(fd_set *socks, int *connections, int *connection_num)
+static void set_file_descriptors(fd_set *socks)
+{
+	FD_ZERO(socks);
+	FD_SET(sock, socks); 
+	int i;
+	for(i = 0; i < connection_num; ++i) {
+		FD_SET(connections[i], socks);
+	}		
+
+}
+
+static void handle_new_connection(fd_set *socks)
 {
 	struct sockaddr_in clntAddr; 
 	socklen_t clntAddrLen = sizeof(clntAddr); 
-	int clntSock = accept(sock, (struct sockaddr *) &clntAddr, &clntAddrLen);
+	int client_sock = accept(sock, (struct sockaddr *) &clntAddr, &clntAddrLen);
 
-	connections[(*connection_num)++] = clntSock;
-
-	if (clntSock < 0) 
-		die_with_system_message("accept() failed"); 	
+	if (client_sock < 0) 
+		die_with_system_message("accept() failed"); 	                     
+		
+	connections[connection_num++] = client_sock; 
+	set_non_blocking(client_sock);  
+	
+	stomp_machine = stomp_create(client_sock, send_data, close_socket);
 }
 
-static void handle_tcp_client(int clientSock) 
+static void handle_tcp_client(int client_sock) 
 {  
 	char buf[BUFSIZE];
 
 	int i = 0;
 	int bytes_recv, total_bytes_recv = 0;
 
-	while(1) {
-		bytes_recv = recv(clientSock, buf + total_bytes_recv, BUFSIZE - total_bytes_recv, 0);
+	for(;;) {
+		bytes_recv = recv(client_sock, buf + total_bytes_recv, BUFSIZE - total_bytes_recv, 0);
 		if (bytes_recv <=0)
 			break;
 
@@ -165,23 +182,18 @@ static void handle_tcp_client(int clientSock)
 	if (total_bytes_recv <= 0)
 		return;                                           
 
-	stomp_frame *f = stomp_frame_parse(buf, total_bytes_recv); 
-	if (f == NULL) 
-		return; 
-
-	stomp_frame *rf = stomp_process(f);
-
-	if (rf) {
-		scs *s = stomp_frame_serialize(rf); 
-
-		if (send(clientSock, scs_get_content(s), scs_get_size(s), 0) != scs_get_size(s)) {
-			perror("send frame data failed");
-		}                                                                     
-		scs_free(s);
-		stomp_frame_free(rf);
-	} 
-
-	stomp_frame_free(f);
-
+	stomp_receive(stomp_machine, buf, total_bytes_recv);
 }                          
 
+static int send_data(int sock, char *buf, int size) 
+{
+	if (send(sock, buf, size, 0) != size) {
+		perror("send frame data failed");
+	}                                         
+	return size;                            
+}            
+
+static void close_socket(int sock)
+{
+	close(sock);
+}

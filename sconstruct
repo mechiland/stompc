@@ -10,6 +10,6 @@ test_env = Environment()
 test_env.Append(CPPPATH = [lib_ut_path + '/include']) 
 test_env.Append(LIBPATH = [lib_ut_path])
 test_env.Append(LIBS = 'libUnitTest++') 
-ut = test_env.Program('ut/' + ut_name, [Glob('ut/*.cpp'), 'src/stomp_frame.o', 'src/stomp_protocol.o', 'src/scs.o'])
+ut = test_env.Program('ut/' + ut_name, [Glob('ut/*.cpp'), 'src/stomp_frame.o', 'src/stomp.o', 'src/scs.o'])
 
 Default(app, ut)

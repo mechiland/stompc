@@ -7,13 +7,18 @@ struct _scs {
     
 scs *scs_create(const char* cstr)
 {                                                  
+	return scs_ncreate(cstr, strlen(cstr));
+}          
+
+scs *scs_ncreate(const char* buf, int size) 
+{
 	scs *s = (scs *)malloc(sizeof(*s));
-	s->str = (char *)malloc(sizeof(char) * strlen(cstr));
-	memcpy(s->str, cstr, strlen(cstr));
-	s->size = strlen(cstr);
+	s->str = (char *)malloc(sizeof(char) * size);
+	memcpy(s->str, buf, size);
+	s->size = size;
 	
-	return s;
-}   
+	return s;	
+}
 
 void scs_append(scs *s, const char* cstr)
 {
@@ -44,4 +49,9 @@ void scs_free(scs *s)
 {
 	free(s->str);
 	free(s);
+}
+
+void scs_clear(scs *s)
+{
+	s->size = 0;
 }

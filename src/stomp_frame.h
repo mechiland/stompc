@@ -11,7 +11,7 @@ struct _stomp_frame;
 typedef struct _stomp_frame stomp_frame;
                                                       
 stomp_frame *stomp_frame_create(const char *verb, const char *body);  
-stomp_frame *stomp_frame_parse(char *buf, int size);  
+stomp_frame *stomp_frame_parse(scs *s);  
 char *stomp_frame_get_verb(stomp_frame *f);
 char *stomp_frame_get_body(stomp_frame *f);
 void stomp_frame_free(stomp_frame *f);

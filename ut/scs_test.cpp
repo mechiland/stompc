@@ -11,6 +11,26 @@ TEST(should_create_correct_stompc_string)
 	scs_free(s);
 }                       
 
+TEST(should_be_able_to_create_empty_string)
+{                           
+	char *cstr = "";
+	scs *s = scs_create(cstr);
+	CHECK(strncmp(cstr, scs_get_content(s), scs_get_size(s)) == 0);
+	CHECK_EQUAL(strlen(cstr), scs_get_size(s));	
+	
+	scs_free(s);
+}        
+
+TEST(should_be_able_to_create_sized_string)
+{
+	char *buf = "aa\0bb";
+	scs *s = scs_ncreate(buf, 5);
+	CHECK(strncmp(buf, scs_get_content(s), scs_get_size(s)) == 0);
+	CHECK_EQUAL(5, scs_get_size(s));	
+	
+	scs_free(s);	
+}               
+
 TEST(should_be_able_to_append_c_string_to_stompc_string)
 {
 	char *cstr = "hello";
@@ -60,4 +80,16 @@ TEST(should_handle_appending_empty_string)
 	                                              
 	scs_free(s);	
 	
+} 
+
+TEST(clear_string_should_truncate_string_to_zero_size)
+{
+	char *cstr = "hello";
+	
+	scs *s = scs_create(cstr);
+	scs_clear(s);
+	
+	CHECK_EQUAL(0, scs_get_size(s));	
+	                                              
+	scs_free(s);		
 }

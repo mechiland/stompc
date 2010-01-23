@@ -9,11 +9,13 @@ struct _scs;
 typedef struct _scs scs;
       
 scs *scs_create(const char* cstr);
+scs *scs_ncreate(const char* buf, int size);
 void scs_append(scs *s, const char* cstr); 
 void scs_nappend(scs *s, const char* cstr, int size);
 char *scs_get_content(scs *s);
 int scs_get_size(scs *s);
-void scs_free(scs *s);
+void scs_free(scs *s);          
+void scs_clear(scs *s);
 
 #ifdef __cplusplus 
 } 

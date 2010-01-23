@@ -48,7 +48,7 @@ void check_null_frame(char *data, int size)
 
 stomp_frame *create_frame(char *data, int size) 
 {
-	stomp_frame *f = stomp_frame_parse(data, size);
+	stomp_frame *f = stomp_frame_parse(scs_ncreate(data, size));
 	return f;
 }                  
 
