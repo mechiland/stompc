@@ -4,12 +4,43 @@
 #include <arpa/inet.h> 
 #include "tcp_server.h"
 #include "stomp_protocol.h"
+     
+static void handle_tcp_client(int clntSocket);
+static void interrupt_handler(int sig); 
 
-int start_server()
+static int sock;
+
+static void interrupt_handler(int sig) 
 {
-	int servSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (servSock < 0) 
+	puts("Shutting down server, stop listening.");
+	close(sock);
+}   
+
+static void set_interrupt_handler() 
+{
+	struct sigaction handler;
+	handler.sa_handler = interrupt_handler;
+	if(sigfillset(&handler.sa_mask) < 0)
+	{
+		die_with_system_message("sigfillset() failed");
+		close(sock);
+	}
+	handler.sa_flags = 0;
+	
+	if(sigaction(SIGINT, &handler, 0) < 0)
+	{
+		die_with_system_message("sigaction() failed");
+		close(sock);
+	}	
+}
+
+void start_server()
+{
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock < 0) {
 		die_with_system_message("socket() failed"); 
+		close(sock);		
+	} 
 
 	struct sockaddr_in servAddr; 
 	memset(&servAddr, 0, sizeof(servAddr)); 
@@ -17,16 +48,31 @@ int start_server()
 	servAddr.sin_addr.s_addr = htonl(INADDR_ANY); 
 	servAddr.sin_port = htons(PORT); 
 
-	if (bind(servSock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) 
+	if (bind(sock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
 		die_with_system_message("bind() failed"); 
+		close(sock);
+	}		
 
-	if (listen(servSock, MAXPENDING) < 0) 
+	if (listen(sock, MAXPENDING) < 0) {
 		die_with_system_message("listen() failed");
+		close(sock);
+	}
+	
+	set_interrupt_handler();
+	
+	for (;;) { 
+		struct sockaddr_in clntAddr; 
+		socklen_t clntAddrLen = sizeof(clntAddr); 
+		int clntSock = accept(sock, (struct sockaddr *) &clntAddr, &clntAddrLen); 
+		if (clntSock < 0) 
+			die_with_system_message("accept() failed"); 
 
-	return servSock;
+		handle_tcp_client(clntSock); 
+	} 	
 }    
 
-void handle_tcp_client(int clientSock) {  
+static void handle_tcp_client(int clientSock) 
+{  
 	char buf[BUFSIZE];
 
 	for (;;) {

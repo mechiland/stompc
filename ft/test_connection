@@ -1,4 +1,9 @@
 #!/usr/bin/expect --
+
+proc shut_down_server {server} {
+	send -i $server \003
+	expect -i $server "Shutting down server"	
+}
        
 set timeout 2
 
@@ -7,11 +12,12 @@ spawn nc localhost 61613; set client $spawn_id
 
 expect_after {
 	-i $any_spawn_id 
-	timeout {puts "\ntimeout\nTest Failed"; exit -1}
+	timeout {puts "\ntimeout\nTest Failed"; shut_down_server $server; exit -1}
 	eof {puts "\neof\nTest Failed"; exit -1}
 }
 
 send "CONNECT\n\n\0\n"
-expect "CONNECTED"
+expect "CONNECTED"   
+
 
 puts "\nTest Successful!"                               

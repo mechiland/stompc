@@ -5,7 +5,6 @@
 #define MAXPENDING 5      
 #define PORT 61613            
 
-int start_server();
-void handle_tcp_client(int clntSocket);
+void start_server();
 
 #endif /* end of include guard: TCP_SERVER_H */
