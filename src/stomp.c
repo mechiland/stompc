@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include "stomp.h"
 #include "scs.h"
+#include "stomp_protocol.h"
+#include "stomp_frame.h"
 
 struct _stomp {
 	int sock;
@@ -8,17 +10,6 @@ struct _stomp {
 	close_handler *close_handler;
 	scs *buffer;
 };  
-
-stomp_frame *stomp_process(stomp_frame *f)
-{       
-	stomp_frame *rf = NULL;    
-	if(!strcmp(stomp_frame_get_verb(f), "CONNECT"))
-	{
-		rf = stomp_frame_create("CONNECTED", "");
-	} 
-	
-	return rf;
-}       
 
 stomp *stomp_create(int sock, send_handler *send_handler, close_handler *close_handler)
 {
@@ -37,7 +28,7 @@ void stomp_receive(stomp *stp, char *buf, int size)
 		return; 
 	} 
     
-	stomp_frame *rf = stomp_process(f);
+	stomp_frame *rf = stomp_proto_process(f);
 
 	if (rf) {
 		scs *s = stomp_frame_serialize(rf); 
