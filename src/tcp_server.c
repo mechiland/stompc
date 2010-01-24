@@ -120,7 +120,11 @@ void start_server()
 		if (read_ready_socks == 0) {
 			continue;
 		}
-
+        
+		/*
+			TODO: could encapsulate discriptors to separate different kinds of discriptors from the 
+				  tcp server. Also making supporting more discriptors easier.
+		*/
 		if (FD_ISSET(sock, &socks)) { 
 			printf("Handling new client connection\n");
 			handle_new_connection(&socks);
@@ -145,7 +149,7 @@ static void set_file_descriptors(fd_set *socks)
 	int i;
 	for(i = 0; i < connection_num; ++i) {
 		if (connections[i] >= 0) { //TODO: need better way to remove a sock from the array
-			FD_SET(connections[i], socks);			
+			FD_SET(connections[i], socks);		
 		}
 	}		
 
@@ -163,7 +167,9 @@ static void handle_new_connection(fd_set *socks)
 	connections[connection_num++] = client_sock; 
 	set_non_blocking(client_sock);  
 	                                          
-	// TODO: to handle multiple clients same time, we need store all stomp machines
+	// TODO: to handle multiple clients same time, we need store all stomp machines  
+	// TODO: could use observation pattern or event model to let this tcp_server behave as 
+	// 		 an event machine to be able to support more protocols than just the stomp.
 	stomp_machine = stomp_create(client_sock, send_data, close_client_socket);
 }
 
