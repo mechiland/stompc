@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 #include "scs.h"
             
 struct _scs {

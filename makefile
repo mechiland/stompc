@@ -8,9 +8,11 @@ LIBS =
 CFLAGS = $(INCLUDE)
 
 TARGET = stompc
+SRC_DIR = src
+OUT_DIR = out
 
 SOURCES = $(shell find src -name "*.c")
-OBJS = $(patsubst %.c, %.o, $(SOURCES))
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OUT_DIR)/%.o, $(SOURCES))
 
 .PHONY: all clean
 
@@ -23,7 +25,7 @@ $(TARGET): $(OBJS)
 clean:
 	@$(RM) $(OBJS) $(TARGET)
 
-%.o: %.c
-	@echo "compiling $< ..."
+$(OUT_DIR)/%.o: $(SRC_DIR)/%.c
+	@echo "compiling $< to $@ ..."
 	@$(CC) $(CFLAGS) -c $< -o $@ 
 

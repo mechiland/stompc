@@ -75,6 +75,15 @@ static void set_non_blocking(int sock) {
 	}
 }   
 
+static int bind_to_port(int sock, int port_no){
+	struct sockaddr_in servAddr; 
+	memset(&servAddr, 0, sizeof(servAddr)); 
+	servAddr.sin_family = AF_INET; 
+	servAddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+	servAddr.sin_port = htons(port_no); 
+
+	return bind(sock, (struct sockaddr*) &servAddr, sizeof(servAddr));
+}
 static void create_server_sock_and_listen()
 {
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -84,13 +93,7 @@ static void create_server_sock_and_listen()
 	set_reuse_addr();
 	set_non_blocking(sock);	
 
-	struct sockaddr_in servAddr; 
-	memset(&servAddr, 0, sizeof(servAddr)); 
-	servAddr.sin_family = AF_INET; 
-	servAddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servAddr.sin_port = htons(PORT); 
-
-	if (bind(sock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
+	if (bind_to_port(sock, PORT) < 0) {
 		handle_fatal_error("bind() failed"); 
 	}		
 
