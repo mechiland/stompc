@@ -17,7 +17,7 @@ struct _stomp_frame;
 typedef struct _stomp_frame stomp_frame;
                                                       
 stomp_frame *stomp_frame_create(const char *verb, const char *body);
-void add_frame_header(stomp_frame *frame, char *key, char *value);
+void add_frame_header(stomp_frame *frame, const char *key, const char *value);
 
 stomp_frame *stomp_frame_parse(scs *s);  
 char *stomp_frame_get_verb(stomp_frame *f);

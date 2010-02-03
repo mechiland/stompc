@@ -36,8 +36,32 @@ TEST(should_return_frame_if_buf_contain_valid_stomp_frame)
 	stomp_frame *f = create_frame(data, strlen(data) + 1);
 	
 	CHECK_EQUAL("CONNECT", stomp_frame_get_verb(f));
-	CHECK_EQUAL("aaa", stomp_frame_get_body(f));                
+	CHECK_EQUAL("aaa", stomp_frame_get_body(f));      
+	CHECK_EQUAL((frame_header *)NULL, get_headers(f));  
 
+	stomp_frame_free(f);   	
+}
+
+TEST(should_add_frame_headers_if_buf_contains_valid_header)
+{                                                        
+	char *data = "CONNECT\nlogin:name\npasscode:12345\n\naaa\0";                           	
+	stomp_frame *f = create_frame(data, strlen(data) + 1);
+	
+	CHECK_EQUAL("CONNECT", stomp_frame_get_verb(f));
+	CHECK_EQUAL("aaa", stomp_frame_get_body(f));                
+	
+	frame_header * header = get_headers(f);
+	CHECK((frame_header *)NULL != header);  
+	CHECK_EQUAL("login", header->key);  
+	CHECK_EQUAL("name", header->value);  
+	
+	header = header->next;
+	CHECK((frame_header *)NULL != header);  
+	CHECK_EQUAL("passcode", header->key);  
+	CHECK_EQUAL("12345", header->value);  
+	
+	header = header->next;
+	CHECK_EQUAL((frame_header *)NULL, header);
 	stomp_frame_free(f);   	
 }
 
@@ -90,12 +114,12 @@ TEST(should_return_empty_headers_when_create_a_new_frame)
 TEST(should_add_one_frame_header)
 {
 	stomp_frame *f = stomp_frame_create("verb", "");
-	add_frame_header(f, "key", "value");
+	add_frame_header(f, "key0", "value0");
 	frame_header * header = get_headers(f);
 	CHECK((frame_header *)NULL != header);
 	
-	CHECK_EQUAL("key", header->key);
-	CHECK_EQUAL("value", header->value);
+	CHECK_EQUAL("key0", header->key);
+	CHECK_EQUAL("value0", header->value);
 	CHECK_EQUAL((frame_header *)NULL, header->next);
 	stomp_frame_free(f);
 }
@@ -103,13 +127,18 @@ TEST(should_add_one_frame_header)
 TEST(should_add_another_frame_header)
 {
 	stomp_frame *f = stomp_frame_create("verb", "");
-	add_frame_header(f, "key", "value");
+	add_frame_header(f, "key1", "value1");
 	add_frame_header(f, "key2", "value2");
-	frame_header * header = get_headers(f)->next;
-	CHECK((frame_header *)NULL != header);
 	
+	frame_header * header = get_headers(f);
+	CHECK((frame_header *)NULL != header);
+	CHECK_EQUAL("key1", header->key);
+	CHECK_EQUAL("value1", header->value);
+	
+	header = header->next;
 	CHECK_EQUAL("key2", header->key);
 	CHECK_EQUAL("value2", header->value);
+	
 	CHECK_EQUAL((frame_header *)NULL, header->next);
 	stomp_frame_free(f);
 }
