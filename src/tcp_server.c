@@ -84,6 +84,7 @@ static int bind_to_port(int sock, int port_no){
 
 	return bind(sock, (struct sockaddr*) &servAddr, sizeof(servAddr));
 }
+
 static void create_server_sock_and_listen()
 {
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);

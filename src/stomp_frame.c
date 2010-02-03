@@ -6,6 +6,7 @@
 
 struct _stomp_frame {
 	char *verb;
+	frame_header *headers;
 	char *body;
 };
 
@@ -16,6 +17,7 @@ stomp_frame *stomp_frame_create(const char *verb, const char *body)
 	stomp_frame *f = malloc(sizeof(*f));                
 	f->verb = malloc((strlen(verb) + 1) * sizeof(char));
 	strcpy(f->verb, verb);
+	f->headers = NULL;
 	f->body = malloc((strlen(body) + 1) * sizeof(char));
 	strcpy(f->body, body);
 	
@@ -109,4 +111,31 @@ char *get_verb(stomp_frame *f)
 char *get_body(stomp_frame *f)
 {
 	return f->body;
+}
+
+frame_header * get_headers(stomp_frame *f)
+{
+	return f->headers;
+}
+
+void add_frame_header(stomp_frame *frame, char *key, char *value)
+{
+	frame_header *last = malloc(sizeof(*last));
+	last->key = key;
+	last->value = value;
+
+	frame_header *prev, * next;
+	prev = next = frame->headers;
+	while(next != NULL){
+		prev = next;
+		next = prev->next;
+	}
+	if(prev == NULL){
+		frame->headers = prev = last;
+	}
+	else{
+		prev->next = last;
+		prev = prev->next;
+	}
+	prev->next = NULL;
 }

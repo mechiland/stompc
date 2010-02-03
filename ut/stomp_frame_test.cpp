@@ -79,3 +79,37 @@ TEST(should_return_serialized_frame_when_body_is_empty)
 	scs_free(s);
 	stomp_frame_free(f);
 }
+
+TEST(should_return_empty_headers_when_create_a_new_frame)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	CHECK_EQUAL((frame_header *)NULL, get_headers(f));
+	stomp_frame_free(f);
+}
+
+TEST(should_add_one_frame_header)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key", "value");
+	frame_header * header = get_headers(f);
+	CHECK((frame_header *)NULL != header);
+	
+	CHECK_EQUAL("key", header->key);
+	CHECK_EQUAL("value", header->value);
+	CHECK_EQUAL((frame_header *)NULL, header->next);
+	stomp_frame_free(f);
+}
+
+TEST(should_add_another_frame_header)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key", "value");
+	add_frame_header(f, "key2", "value2");
+	frame_header * header = get_headers(f)->next;
+	CHECK((frame_header *)NULL != header);
+	
+	CHECK_EQUAL("key2", header->key);
+	CHECK_EQUAL("value2", header->value);
+	CHECK_EQUAL((frame_header *)NULL, header->next);
+	stomp_frame_free(f);
+}
