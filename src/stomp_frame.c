@@ -119,7 +119,17 @@ char *stomp_frame_get_body(stomp_frame *f)
 scs *stomp_frame_serialize(stomp_frame *f)
 {               
 	scs *s = scs_create(f->verb);
-	scs_append(s, "\n\n");
+	scs_append(s, "\n");
+	frame_header *header = get_headers(f);
+	while(header != NULL){
+		scs_append(s, header->key);
+		scs_append(s, ":");
+		scs_append(s, header->value);
+		scs_append(s, "\n");
+		header = header->next;
+	}
+	scs_append(s, "\n");
+	
 	scs_append(s, f->body);
 	scs_nappend(s, "\0", 1);
 	return s;

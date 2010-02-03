@@ -104,6 +104,22 @@ TEST(should_return_serialized_frame_when_body_is_empty)
 	stomp_frame_free(f);
 }
 
+TEST(should_return_serialized_frame_when_headers_are_not_empty)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key1", "value1");
+	add_frame_header(f, "key2", "value2");
+	scs *s = stomp_frame_serialize(f);   
+		                        
+	char *expected_str = "verb\nkey1:value1\nkey2:value2\n\n\0";
+	
+	CHECK_EQUAL(expected_str, scs_get_content(s));
+	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));
+		
+	scs_free(s);
+	stomp_frame_free(f);
+}
+
 TEST(should_return_empty_headers_when_create_a_new_frame)
 {
 	stomp_frame *f = stomp_frame_create("verb", "");
