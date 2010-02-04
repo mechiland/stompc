@@ -106,12 +106,12 @@ TEST(should_return_serialized_frame_when_body_is_empty)
 
 TEST(should_return_serialized_frame_when_headers_are_not_empty)
 {
-	stomp_frame *f = stomp_frame_create("verb", "");
+	stomp_frame *f = stomp_frame_create("verb", "body");
 	add_frame_header(f, "key1", "value1");
 	add_frame_header(f, "key2", "value2");
 	scs *s = stomp_frame_serialize(f);   
 		                        
-	char *expected_str = "verb\nkey1:value1\nkey2:value2\n\n\0";
+	char *expected_str = "verb\nkey1:value1\nkey2:value2\n\nbody\0";
 	
 	CHECK_EQUAL(expected_str, scs_get_content(s));
 	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));

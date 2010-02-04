@@ -191,7 +191,7 @@ static void handle_tcp_client(int client_sock)
 	if (total_bytes_recv <= 0)
 		return;                                           
 
-	stomp_receive(stomp_machine, buf, total_bytes_recv);
+	stomp_receive(stomp_machine, buf, total_bytes_recv + 1);
 }                          
 
 static int send_data(int sock, char *buf, int size) 

@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include "stomp.h"
 #include "scs.h"
 #include "stomp_protocol.h"
@@ -23,18 +26,22 @@ stomp *stomp_create(int sock, send_handler *send_handler, close_handler *close_h
 void stomp_receive(stomp *stp, char *buf, int size) 
 {   
 	scs_nappend(stp->buffer, buf, size);
+	printf("Try to parse frame from client %d\n", stp->sock);
 	stomp_frame *f = stomp_frame_parse(stp->buffer); 
 	if (f == NULL) {
+		printf("Get a NULL frame from client %d, will return.\n", stp->sock);
 		return; 
-	} 
+	}
     
+	printf("Get %s frame from client %d\n", get_verb(f), stp->sock);
 	stomp_frame *rf = stomp_proto_process(stp, f);
 
 	if (rf) {
 		scs *s = stomp_frame_serialize(rf); 
 		if (stp->send_handler(stp->sock, scs_get_content(s), scs_get_size(s)) != scs_get_size(s)) {
 			perror("Failed to send response frame data");
-		}                                                                     
+		}         
+		printf("Send CONNECTED response to client %d\n", stp->sock);                                                            
 		scs_free(s);
 		stomp_frame_free(rf);
 	} 
