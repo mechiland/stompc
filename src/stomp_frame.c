@@ -40,9 +40,6 @@ stomp_frame *stomp_frame_parse(scs *s)
 	char next_char;
 	while (i < size) {
 		next_char = buf[i];
-		if(i == size -1 && next_char != '\0'){
-			printf("Error: Last charactor is %c(%d) rather than 0\n", next_char, next_char);
-		}
 		if (next_char == '\0') {
 			frame_end = i;
 			break;
@@ -58,10 +55,10 @@ stomp_frame *stomp_frame_parse(scs *s)
 			verb_end = line_end;
 		}
 		i++;
-	} 
+	}
 
 	if (!is_valid_frame(frame_end, header_end, verb_end)) {
-		printf("Not a valid frame: verb end %d, header end %d, frame end %d\n", verb_end, header_end, frame_end);
+		printf("Not a valid frame for input string: %s\n", buf);
 		return NULL;
 	}
 		     
@@ -124,8 +121,10 @@ scs *stomp_frame_serialize(stomp_frame *f)
 {               
 	scs *s = scs_create(f->verb);
 	scs_append(s, "\n");
-	frame_header *header = get_headers(f);
+	frame_header *header = f->headers;
 	while(header != NULL){
+		printf("Header %s:%s\n", header->key, header->value);
+		
 		scs_append(s, header->key);
 		scs_append(s, ":");
 		scs_append(s, header->value);

@@ -31,15 +31,24 @@ static char * prompt_and_get_string(char *msg){
 	
 	char *s = malloc(1024);
 	fgets(s,1024,stdin);
+	s[strlen(s) - 1] = '\0';
 	return s;
+}
+
+static void print_frame(stomp_frame *f){
+	scs *s = stomp_frame_serialize(f);
+	printf("Frame: %s\n", scs_get_content(s));
+	// scs_free(s); 
 }
 
 stomp_frame * complete_command_send(){
 	char *destination = prompt_and_get_string("Input destination(Example:/queue/a):\n");
 	char *body = prompt_and_get_string("Input body(Example: hello queue a):\n");
-	
+		
 	stomp_frame *frame = stomp_frame_create("SEND", body);
+	print_frame(frame);
 	add_frame_header(frame, "destination", destination);
+	print_frame(frame);
 	
 	free(destination);
 	free(body);

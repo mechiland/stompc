@@ -32,7 +32,7 @@ void scs_nappend(scs *s, const char* cstr, int size)
 	if (size <= 0)
 		return;
 		
-	s->str = (char *)realloc(s->str, size);
+	s->str = (char *)realloc(s->str, strlen(s->str) + size);
 	memcpy(s->str + s->size, cstr, size);
 	s->size += size;	
 }

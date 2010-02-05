@@ -83,7 +83,7 @@ static stomp_frame *create_connect_frame(char * username, char * passcode)
 	return frame;
 }
 
-static void select_command_and_send(int sockfd){
+static int select_command_and_send(int sockfd){
 	stomp_command c = select_command(sockfd);
 	if(c < SEND || c > DISCONNECT){
 		printf("Invalid command, will ignore.\n");
@@ -102,6 +102,7 @@ static void select_command_and_send(int sockfd){
 		break;
 	}
 	send_frame(sockfd, frame);
+	return c != DISCONNECT;
 }
 
 void connect_stomp_server(){
@@ -114,9 +115,10 @@ void connect_stomp_server(){
 		printf("Server confirmed, will talk.\n");
 	else
 		error_and_exit("Server response is incorrect, will exit.\n");
-	while(1)
+	int should_stop = 1;
+	while(should_stop)
 	{
-		select_command_and_send(sockfd);
+		should_stop = select_command_and_send(sockfd);
 		// stomp_frame *frame = receive_frame(sockfd);	
 		// printf("Receiving frame from server: %s\n", scs_get_content(stomp_frame_serialize(frame)));	
 	}
