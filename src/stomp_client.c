@@ -90,8 +90,16 @@ static void select_command_and_send(int sockfd){
 		return;
 	}
 	stomp_frame *frame = NULL;
-	if(c == SEND){
+	switch(c){
+	case SEND:
 		frame = complete_command_send();
+		break;
+	case DISCONNECT:
+		frame = stomp_frame_create("DISCONNECT", "");
+		break;
+	default:
+		printf("Command %d is still not supported.\n", c);
+		break;
 	}
 	send_frame(sockfd, frame);
 }
@@ -109,7 +117,6 @@ void connect_stomp_server(){
 	while(1)
 	{
 		select_command_and_send(sockfd);
-		
 		// stomp_frame *frame = receive_frame(sockfd);	
 		// printf("Receiving frame from server: %s\n", scs_get_content(stomp_frame_serialize(frame)));	
 	}

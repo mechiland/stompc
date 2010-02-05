@@ -4,16 +4,9 @@
 #include <stdlib.h>
 #include "stomp_client_helper.h"
 
-static char * command_menu = "1[SEND]	2[SUBSCRIBE]	3[UNSUBSCRIBE]	4[BEGIN]	5[COMMIT]	6[ABORT]	7[ACK]	8[DISCONNECT]";
+//This helper is used to collect user input
 
-static char * prompt_and_get_string(char *msg){
-	printf(msg);
-	fflush(stdout);
-	
-	char *s = malloc(1024);
-	fgets(s,1024,stdin);
-	return s;
-}
+static char * command_menu = "1[SEND]	2[SUBSCRIBE]	3[UNSUBSCRIBE]	4[BEGIN]	5[COMMIT]	6[ABORT]	7[ACK]	8[DISCONNECT]";
 
 stomp_command select_command()
 {
@@ -27,8 +20,18 @@ stomp_command select_command()
 		fgets(s, 1024, stdin);
 		printf("Please select a command(From 1 to 8):\n%s\n", command_menu);
 	}
+	getchar();//Remove redundant Enter char.
 	free(s);
 	return i;
+}
+
+static char * prompt_and_get_string(char *msg){
+	printf(msg);
+	fflush(stdout);
+	
+	char *s = malloc(1024);
+	fgets(s,1024,stdin);
+	return s;
 }
 
 stomp_frame * complete_command_send(){
