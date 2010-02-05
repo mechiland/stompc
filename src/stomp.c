@@ -24,16 +24,14 @@ stomp *stomp_create(int sock, send_handler *send_handler, close_handler *close_h
 }   
 
 void stomp_receive(stomp *stp, char *buf, int size) 
-{   
+{   	
 	scs_nappend(stp->buffer, buf, size);
-	printf("Try to parse frame from client %d\n", stp->sock);
 	stomp_frame *f = stomp_frame_parse(stp->buffer); 
+	printf("Get %s frame from client %d\n", f == NULL ? NULL : get_verb(f), stp->sock);
 	if (f == NULL) {
-		printf("Get a NULL frame from client %d, will return.\n", stp->sock);
 		return; 
 	}
     
-	printf("Get %s frame from client %d\n", get_verb(f), stp->sock);
 	stomp_frame *rf = stomp_proto_process(stp, f);
 
 	if (rf) {

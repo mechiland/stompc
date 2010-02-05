@@ -185,7 +185,8 @@ static void handle_tcp_client(int client_sock)
 
 		total_bytes_recv += bytes_recv;
 		i++;
-	}            
+	}          
+	buf[total_bytes_recv] = 0;  
 
 	printf("Got %d bytes: %s\n", total_bytes_recv, buf);
 	if (total_bytes_recv <= 0)
@@ -200,7 +201,7 @@ static int send_data(int sock, char *buf, int size)
 		perror("send frame data failed");
 	}                                         
 	return size;                            
-}            
+}
 
 static void close_client_socket(int sock)
 {

@@ -46,6 +46,10 @@ static int connect_to_server(char * address, int portno)
 
 static void send_frame(int sockfd, stomp_frame * frame)
 {
+	if(frame == NULL)
+		return;
+		
+	printf("Send %s command to server.\n", get_verb(frame));
 	scs *s = stomp_frame_serialize(frame);
 	char *data = scs_get_content(s);
 	
@@ -71,7 +75,7 @@ static stomp_frame * receive_frame(int sockfd)
 	return stomp_frame_parse(s);
 }
 
-static stomp_frame * create_connect_frame(char * username, char * passcode)
+static stomp_frame *create_connect_frame(char * username, char * passcode)
 {
 	stomp_frame * frame = stomp_frame_create("CONNECT", "");
 	add_frame_header(frame, "login", "my_username");
@@ -79,9 +83,21 @@ static stomp_frame * create_connect_frame(char * username, char * passcode)
 	return frame;
 }
 
+static void select_command_and_send(int sockfd){
+	stomp_command c = select_command(sockfd);
+	if(c < SEND || c > DISCONNECT){
+		printf("Invalid command, will ignore.\n");
+		return;
+	}
+	stomp_frame *frame = NULL;
+	if(c == SEND){
+		frame = complete_command_send();
+	}
+	send_frame(sockfd, frame);
+}
+
 void connect_stomp_server(){
 	int sockfd = connect_to_server("127.0.0.1", PORT);
-	printf("Send CONNECT command to server.\n");
 	send_frame(sockfd, create_connect_frame("my_name", "my_passcode"));
 	
 	printf("Waiting for server response...\n");
@@ -92,7 +108,9 @@ void connect_stomp_server(){
 		error_and_exit("Server response is incorrect, will exit.\n");
 	while(1)
 	{
-		stomp_frame *frame = receive_frame(sockfd);	
-		printf("Receiving frame from server: %s\n", scs_get_content(stomp_frame_serialize(frame)));	
+		select_command_and_send(sockfd);
+		
+		// stomp_frame *frame = receive_frame(sockfd);	
+		// printf("Receiving frame from server: %s\n", scs_get_content(stomp_frame_serialize(frame)));	
 	}
 }
