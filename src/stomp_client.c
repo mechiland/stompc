@@ -97,6 +97,12 @@ static int select_command_and_send(int sockfd){
 	case DISCONNECT:
 		frame = stomp_frame_create("DISCONNECT", "");
 		break;
+	case SUBSCRIBE:
+		frame = complete_command_subscribe();
+		break;
+	case UNSUBSCRIBE:
+		frame = complete_command_unsubscribe();
+		break;
 	default:
 		printf("Command %d is still not supported.\n", c);
 		break;

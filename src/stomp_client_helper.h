@@ -7,5 +7,7 @@ typedef enum _stomp_command {COMMAND_START, SEND, SUBSCRIBE, UNSUBSCRIBE, BEGIN,
 
 stomp_command select_command();
 stomp_frame *complete_command_send();
+stomp_frame *complete_command_unsubscribe();
+stomp_frame *complete_command_subscribe();
 
 #endif

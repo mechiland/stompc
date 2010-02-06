@@ -35,22 +35,58 @@ static char * prompt_and_get_string(char *msg){
 	return s;
 }
 
-static void print_frame(stomp_frame *f){
-	scs *s = stomp_frame_serialize(f);
-	printf("Frame: %s\n", scs_get_content(s));
-	// scs_free(s); 
-}
-
 stomp_frame * complete_command_send(){
 	char *destination = prompt_and_get_string("Input destination(Example:/queue/a):\n");
 	char *body = prompt_and_get_string("Input body(Example: hello queue a):\n");
 		
 	stomp_frame *frame = stomp_frame_create("SEND", body);
-	print_frame(frame);
 	add_frame_header(frame, "destination", destination);
-	print_frame(frame);
 	
 	free(destination);
 	free(body);
+	return frame;
+}
+
+
+stomp_frame * complete_command_unsubscribe(){
+	char *destination = prompt_and_get_string("Input destination(Example:/queue/a):\n");
+	char *id = prompt_and_get_string("Input id(Optional, ignore it if click enter):\n");
+		
+	stomp_frame *frame = stomp_frame_create("UNSUBSCRIBE", "");
+	add_frame_header(frame, "destination", destination);
+	if(strlen(id) != 0){
+		add_frame_header(frame, "id", id);
+	}
+	
+	free(destination);
+	return frame;
+}
+
+static int is_valid_ack(char *ack){
+	return strcmp("auto", ack) == 0 || strcmp("client", ack) == 0 || strlen(ack) == 0;
+}
+
+stomp_frame * complete_command_subscribe(){
+	char *destination = prompt_and_get_string("Input destination(Example:/queue/a):\n");
+	char *ack = prompt_and_get_string("Input ack(auto or client, Optional, ignore it if click enter):\n");
+	while(!is_valid_ack(ack)){
+		ack = prompt_and_get_string("Input ack(auto or client, Optional, ignore it if click enter):\n");
+	}
+	char *selector = prompt_and_get_string("Input selector(Optional, ignore it if click enter):\n");
+	char *id = prompt_and_get_string("Input id(Optional, ignore it if click enter):\n");
+		
+	stomp_frame *frame = stomp_frame_create("SUBSCRIBE", "");
+	add_frame_header(frame, "destination", destination);
+	if(strlen(ack) != 0){
+		add_frame_header(frame, "ack", ack);
+	}
+	if(strlen(selector) != 0){
+		add_frame_header(frame, "selector", selector);
+	}
+	if(strlen(id) != 0){
+		add_frame_header(frame, "id", id);
+	}
+	
+	free(destination);
 	return frame;
 }

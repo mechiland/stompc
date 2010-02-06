@@ -118,9 +118,9 @@ char *stomp_frame_get_body(stomp_frame *f)
 }
 
 scs *stomp_frame_serialize(stomp_frame *f)
-{               
+{
 	scs *s = scs_create(f->verb);
-	scs_append(s, "\n");
+	scs_append(s, "\n"); // Improve this method as it will reallocate every time when append new string.
 	frame_header *header = f->headers;
 	while(header != NULL){
 		printf("Header %s:%s\n", header->key, header->value);
