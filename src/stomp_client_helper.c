@@ -47,21 +47,6 @@ stomp_frame * complete_command_send(){
 	return frame;
 }
 
-
-stomp_frame * complete_command_unsubscribe(){
-	char *destination = prompt_and_get_string("Input destination(Example:/queue/a):\n");
-	char *id = prompt_and_get_string("Input id(Optional, ignore it if click enter):\n");
-		
-	stomp_frame *frame = stomp_frame_create("UNSUBSCRIBE", "");
-	add_frame_header(frame, "destination", destination);
-	if(strlen(id) != 0){
-		add_frame_header(frame, "id", id);
-	}
-	
-	free(destination);
-	return frame;
-}
-
 static int is_valid_ack(char *ack){
 	return strcmp("auto", ack) == 0 || strcmp("client", ack) == 0 || strlen(ack) == 0;
 }
@@ -88,5 +73,64 @@ stomp_frame * complete_command_subscribe(){
 	}
 	
 	free(destination);
+	free(ack);
+	free(selector);
+	free(id);
+	return frame;
+}
+
+stomp_frame * complete_command_unsubscribe(){
+	char *destination = prompt_and_get_string("Input destination(Example:/queue/a):\n");
+	char *id = prompt_and_get_string("Input id(Optional, ignore it if click enter):\n");
+		
+	stomp_frame *frame = stomp_frame_create("UNSUBSCRIBE", "");
+	add_frame_header(frame, "destination", destination);
+	if(strlen(id) != 0){
+		add_frame_header(frame, "id", id);
+	}
+	
+	free(destination);
+	free(id);
+	return frame;
+}
+
+stomp_frame *complete_command_begin(){
+	char *transaction = prompt_and_get_string("Input transaction identifier:\n");
+	stomp_frame *frame = stomp_frame_create("BEGIN", "");
+	add_frame_header(frame, "transaction", transaction);
+	
+	free(transaction);
+	return frame;
+}
+
+stomp_frame *complete_command_commit(){
+	char *transaction = prompt_and_get_string("Input transaction identifier:\n");
+	stomp_frame *frame = stomp_frame_create("COMMIT", "");
+	add_frame_header(frame, "transaction", transaction);
+	
+	free(transaction);
+	return frame;
+}
+
+stomp_frame *complete_command_ack(){
+	char *message_id = prompt_and_get_string("Input message identifier:\n");
+	char *transaction = prompt_and_get_string("Input transaction identifier(Optional, ignore it if click enter):\n");
+	stomp_frame *frame = stomp_frame_create("ACK", "");
+	add_frame_header(frame, "message-id", message_id);
+	if(strlen(transaction) != 0){
+		add_frame_header(frame, "transaction", transaction);
+	}
+	
+	free(message_id);
+	free(transaction);
+	return frame;
+}
+
+stomp_frame *complete_command_abort(){
+	char *transaction = prompt_and_get_string("Input transaction identifier:\n");
+	stomp_frame *frame = stomp_frame_create("ABORT", "");
+	add_frame_header(frame, "transaction", transaction);
+	
+	free(transaction);
 	return frame;
 }
