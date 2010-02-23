@@ -39,7 +39,7 @@ void stomp_receive(stomp *stp, char *buf, int size)
 		if (stp->send_handler(stp->sock, scs_get_content(s), scs_get_size(s)) != scs_get_size(s)) {
 			perror("Failed to send response frame data");
 		}         
-		printf("Send CONNECTED response to client %d\n", stp->sock);                                                            
+		printf("Send %s response to client %d\n",get_verb(rf), stp->sock);
 		scs_free(s);
 		stomp_frame_free(rf);
 	} 

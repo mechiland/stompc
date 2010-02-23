@@ -9,7 +9,7 @@ TEST(should_return_null_if_frame_can_not_be_recoganized)
 	stomp_frame_free(f);
 }
 
-TEST(should_return_connected_frame_if_given_connect_frame)
+TEST(should_return_connected_frame_when_given_connect_frame)
 {
 	stomp_frame *f = stomp_frame_create("CONNECT", "body");
 	stomp_frame *rf = stomp_proto_process(NULL, f);
@@ -40,4 +40,3 @@ TEST(should_close_connection_if_given_disconnect_frame)
 	
 	stomp_frame_free(f);	
 }
-

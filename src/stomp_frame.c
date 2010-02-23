@@ -58,7 +58,6 @@ stomp_frame *stomp_frame_parse(scs *s)
 	}
 
 	if (!is_valid_frame(frame_end, header_end, verb_end)) {
-		printf("Not a valid frame for input string: %s\n", buf);
 		return NULL;
 	}
 		     
@@ -122,9 +121,7 @@ scs *stomp_frame_serialize(stomp_frame *f)
 	scs *s = scs_create(f->verb);
 	scs_append(s, "\n"); // Improve this method as it will reallocate every time when append new string.
 	frame_header *header = f->headers;
-	while(header != NULL){
-		printf("Header %s:%s\n", header->key, header->value);
-		
+	while(header != NULL){		
 		scs_append(s, header->key);
 		scs_append(s, ":");
 		scs_append(s, header->value);
@@ -158,6 +155,18 @@ char *get_body(stomp_frame *f)
 frame_header * get_headers(stomp_frame *f)
 {
 	return f->headers;
+}
+
+char *get_header(stomp_frame *f, char *header_name)
+{
+	frame_header *headers = get_headers(f);
+	while(headers != NULL){
+		if(strcmp(header_name, headers->key) == 0){
+			return headers->value;
+		}
+		headers = headers->next;
+	}
+	return NULL;
 }
 
 void add_frame_header(stomp_frame *frame, const char *key, const char *value)

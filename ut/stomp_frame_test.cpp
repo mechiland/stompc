@@ -174,3 +174,26 @@ TEST(should_add_another_frame_header)
 	CHECK_EQUAL((frame_header *)NULL, header->next);
 	stomp_frame_free(f);
 }
+
+TEST(should_return_header_value_when_given_header_key)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key1", "value1");
+	add_frame_header(f, "key2", "value2");
+	
+	CHECK_EQUAL("value1", get_header(f, "key1"));
+	CHECK_EQUAL("value2", get_header(f, "key2"));
+	frame_header * header = get_headers(f);
+	CHECK_EQUAL((frame_header *)NULL, header->next->next);
+	
+	stomp_frame_free(f);	
+}
+
+TEST(should_return_NULL_when_given_not_existed_header_key)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	
+	CHECK((char *)NULL == get_header(f, "key"));
+	
+	stomp_frame_free(f);
+}

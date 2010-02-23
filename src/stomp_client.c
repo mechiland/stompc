@@ -10,10 +10,13 @@
 #include <strings.h>
 #include <sys/uio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "stomp_client.h"
 #include "tcp_server.h"
 #include "scs.h"
+
+static int should_stop = 0;
 
 static void error_and_exit(char *msg)
 {
@@ -87,7 +90,7 @@ static int select_command_and_send(int sockfd){
 	stomp_command c = select_command(sockfd);
 	if(c < SEND || c > DISCONNECT){
 		printf("Invalid command, will ignore.\n");
-		return;
+		return 0;
 	}
 	stomp_frame *frame = NULL;
 	switch(c){
@@ -120,7 +123,17 @@ static int select_command_and_send(int sockfd){
 		break;
 	}
 	send_frame(sockfd, frame);
-	return c != DISCONNECT;
+	return c == DISCONNECT;
+}
+
+static void *wait_and_receive(void *arg){
+	int *sockfd = (int *)arg;
+	while(!should_stop){
+		stomp_frame *f = receive_frame(*sockfd);
+		scs *s = stomp_frame_serialize(f);
+		printf("Receive frame from server: %s\n", scs_get_content(s));
+	}
+	return NULL;
 }
 
 void connect_stomp_server(){
@@ -133,11 +146,13 @@ void connect_stomp_server(){
 		printf("Server confirmed, will talk.\n");
 	else
 		error_and_exit("Server response is incorrect, will exit.\n");
-	int should_stop = 1;
-	while(should_stop)
+	pthread_t wait_thread;
+	if(pthread_create(&wait_thread, NULL, wait_and_receive, &sockfd)){
+		printf("Error creating thread to receive server frames.\n");
+		exit(1);
+	}
+	while(!should_stop)
 	{
 		should_stop = select_command_and_send(sockfd);
-		// stomp_frame *frame = receive_frame(sockfd);	
-		// printf("Receiving frame from server: %s\n", scs_get_content(stomp_frame_serialize(frame)));	
 	}
 }

@@ -28,6 +28,7 @@ scs *stomp_frame_serialize(stomp_frame *f);
 char *get_verb(stomp_frame *f);
 char *get_body(stomp_frame *f);
 frame_header * get_headers(stomp_frame *f);
+char *get_header(stomp_frame *f, char *header_name);
 
 #ifdef __cplusplus 
 } 

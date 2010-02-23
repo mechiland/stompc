@@ -8,7 +8,7 @@ static int sock;
 
 int stub_send_handler(int actual_sock, char *actual_buf, int actual_size)
 {
-	data_sent = 1;                                                  
+	data_sent = 1;
 	CHECK_EQUAL(sock, actual_sock);
 	CHECK_EQUAL(sent_data_size, actual_size);
 	CHECK(strncmp(sent_data, actual_buf, sent_data_size) == 0);    
