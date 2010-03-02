@@ -22,6 +22,21 @@ static void stub_close_handler(int actual_sock)
 	closed = 1;
 }
 	
+static stomp *send_connect_frame(int sock)
+{
+	data_sent = 0;
+	sent_data = "CONNECTED\n\n\0";
+	sent_data_size = strlen(sent_data) + 1;
+
+	stomp *stp = stomp_create(sock, stub_send_handler, NULL);
+
+	char *recv_data = "CONNECT\n\n\0";
+	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
+
+	CHECK_EQUAL(1, data_sent);
+	return stp;
+}
+	
 TEST(should_not_send_frame_if_received_data_is_not_valid_frame)
 {                                                         
 	data_sent = 0;
@@ -49,20 +64,6 @@ TEST(should_send_response_frame_if_received_recoganizable_frame_data)
 	CHECK_EQUAL(1, data_sent); 
 	stomp_close(sock);
 }                             
-
-TEST(should_not_send_response_frame_if_received_unrecoganizable_frame_data)
-{
-	data_sent = 0;
-	sock = 7;
-	
-	char *recv_data = "NOT_SUPPORTED_VERB\n\n\0";
-	stomp *stp = stomp_create(sock, stub_send_handler, NULL);
-
-	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
-	
-	CHECK_EQUAL(0, data_sent); 
-	stomp_close(sock);
-} 
 
 TEST(should_store_received_data_if_the_data_is_not_valid_frame)
 {
@@ -104,7 +105,7 @@ TEST(should_clear_buffered_recv_data_once_it_can_be_recoganized_as_frame)
 	stomp_close(sock);
 }
 
-TEST(should_close_connection_if_given_disconnect_frame)
+TEST(should_close_connection_when_given_disconnect_frame)
 {                                 
 	closed = 0;
 	sock = 10;
@@ -115,5 +116,39 @@ TEST(should_close_connection_if_given_disconnect_frame)
 	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
 	
 	CHECK_EQUAL(1, closed);
+	stomp_close(sock);
+}
+
+TEST(should_send_ERROR_frame_if_received_invalid_header)
+{
+	sock = 11;
+	send_connect_frame(sock);
+	
+	data_sent = 0;
+	sent_data = "ERROR\nmessage:invalid header\n\nHeader NOT_SUPPORTED_VERB is not invalid.\0";
+	sent_data_size = strlen(sent_data) + 1;
+	
+	char *recv_data = "NOT_SUPPORTED_VERB\n\n\0";
+	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
+	
+	CHECK_EQUAL(1, data_sent);
+	
+	stomp_close(sock);
+}
+
+TEST(should_send_ERROR_frame_if_receive_non_CONNECT_frame_and_stomp_is_not_connected)
+{
+	data_sent = 0;
+	sock = 12;
+	sent_data = "ERROR\nmessage:not connected\n\nYou are not connected yet, and it's not a CONNECT frame.\0";
+	sent_data_size = strlen(sent_data) + 1;
+	
+	stomp *stp = stomp_create(sock, stub_send_handler, NULL);
+
+	char *recv_data = "SEND\ndestination:/queue/a\n\nhello queue a\n\0";
+	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
+	
+	CHECK_EQUAL(1, data_sent); 
+
 	stomp_close(sock);
 }

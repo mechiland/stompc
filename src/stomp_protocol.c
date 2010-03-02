@@ -9,6 +9,7 @@ struct _stomp {
 	send_handler *send_handler;
 	close_handler *close_handler;
 	scs *buffer;
+	int connected;
 	stomp *next;
 };
 
@@ -24,6 +25,7 @@ stomp *add_stomp(int sock, send_handler *send_handler, close_handler *close_hand
 	last->send_handler = send_handler;
 	last->close_handler = close_handler; 
 	last->buffer = scs_create("");
+	last->connected = 0;
 	
 	add_stomp_to_machines(last);
 	
@@ -120,4 +122,14 @@ void send_response_frame(stomp *stp, stomp_frame *f)
     	perror("Failed to send response frame data");
     }
 	printf("Send %s response to client %d\n",get_verb(f), stp->sock);
+}
+
+void set_to_connected(stomp *stp)
+{
+	stp->connected = 1;
+}
+
+int is_connected(stomp *stp)
+{
+	return stp->connected;
 }

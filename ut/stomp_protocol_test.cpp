@@ -94,3 +94,21 @@ TEST(should_send_response_frame_to_client)
 	close_stomp(stp);
 	stomp_frame_free(f);
 }
+
+TEST(should_return_stomp_connected_status)
+{	
+	stomp *stp = add_stomp(sock, stub_send_handler, NULL);
+	CHECK_EQUAL(0, is_connected(stp));
+	
+	close_stomp(stp);
+}
+
+TEST(should_set_stomp_to_connected_status)
+{	
+	stomp *stp = add_stomp(sock, stub_send_handler, NULL);
+	CHECK_EQUAL(0, is_connected(stp));
+	set_to_connected(stp);
+	CHECK_EQUAL(1, is_connected(stp));
+	
+	close_stomp(stp);
+}

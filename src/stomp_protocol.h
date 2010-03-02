@@ -12,6 +12,8 @@ stomp * add_stomp(int sock, send_handler *send_handler, close_handler *close_han
 stomp *get_stomp(int client_sock);
 void close_stomp(stomp *stp);	
 
+void set_to_connected(stomp *stp);
+int is_connected(stomp *stp);
 int get_client_sock(stomp *stp);
 scs *get_buffer(stomp *stp);
 
