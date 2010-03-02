@@ -151,8 +151,7 @@ static void set_file_descriptors(fd_set *socks)
 		if (connections[i] >= 0) { //TODO: need better way to remove a sock from the array
 			FD_SET(connections[i], socks);			
 		}
-	}		
-
+	}
 }
 
 static void handle_new_connection(fd_set *socks)
@@ -192,7 +191,7 @@ static void handle_tcp_client(int client_sock)
 	if (total_bytes_recv <= 0)
 		return;                                           
 
-	stomp_receive(stomp_machine, buf, total_bytes_recv + 1);
+	stomp_receive(client_sock, buf, total_bytes_recv + 1);
 }                          
 
 static int send_data(int sock, char *buf, int size) 

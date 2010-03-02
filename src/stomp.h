@@ -12,8 +12,8 @@ typedef int send_handler(int sock, char *buf, int size);
 typedef void close_handler(int sock);
 
 stomp *stomp_create(int sock, send_handler *send_handler, close_handler *close_handler);
-void stomp_receive(stomp *stp, char *buf, int size);         
-void stomp_close_connection(stomp *stp);
+void stomp_receive(int sock, char *buf, int size);         
+void stomp_close(int sock);
       
 #ifdef __cplusplus 
 } 

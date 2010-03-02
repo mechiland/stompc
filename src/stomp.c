@@ -7,50 +7,52 @@
 #include "stomp_protocol.h"
 #include "stomp_frame.h"
 
-struct _stomp {
-	int sock;
-	send_handler *send_handler;
-	close_handler *close_handler;
-	scs *buffer;
-};  
-
 stomp *stomp_create(int sock, send_handler *send_handler, close_handler *close_handler)
-{
-	stomp *stp = malloc(sizeof(*stp));
-	stp->sock = sock;
-	stp->send_handler = send_handler;
-	stp->close_handler = close_handler; 
-	stp->buffer = scs_create("");
-}   
+{	
+	return add_stomp(sock, send_handler, close_handler);
+}
 
-void stomp_receive(stomp *stp, char *buf, int size) 
-{   	
-	scs_nappend(stp->buffer, buf, size);
-	stomp_frame *f = stomp_frame_parse(stp->buffer); 
-	printf("Get %s frame from client %d\n", f == NULL ? NULL : get_verb(f), stp->sock);
-	if (f == NULL) {
+void stomp_close(int sock)
+{
+	stomp *stp = get_stomp(sock);
+	close_stomp(stp);	
+}
+
+void stomp_receive(int sock, char *buf, int size) 
+{
+	stomp *stp = get_stomp(sock);
+	scs_nappend(get_buffer(stp), buf, size);
+	stomp_frame *f = stomp_frame_parse(get_buffer(stp)); 
+	printf("Get %s frame from client %d\n", f == NULL ? NULL : get_verb(f), get_client_sock(stp));
+	if (f == NULL) 
+	{
 		return; 
 	}
     
-	stomp_frame *rf = stomp_proto_process(stp, f);
+	if(strcmp(stomp_frame_get_verb(f), "DISCONNECT") == 0)
+	{
+		close_stomp(stp);
+	}
+	else
+	{
+		stomp_frame *rf = NULL;   
+		char *verb = stomp_frame_get_verb(f); 
+		if(strcmp(verb, "CONNECT") == 0)
+		{
+			rf = stomp_frame_create("CONNECTED", "");
+		} 
+		else if(strcmp(verb, "SEND") == 0)
+		{
+			rf = stomp_frame_create("MESSAGE", get_body(f));
+		}
 
-	if (rf) {
-		scs *s = stomp_frame_serialize(rf); 
-		if (stp->send_handler(stp->sock, scs_get_content(s), scs_get_size(s)) != scs_get_size(s)) {
-			perror("Failed to send response frame data");
-		}         
-		printf("Send %s response to client %d\n",get_verb(rf), stp->sock);
-		scs_free(s);
-		stomp_frame_free(rf);
-	} 
+		if (rf) 
+		{
+			send_response_frame(stp, rf);    
+		    stomp_frame_free(rf);
+		}
+	}
 
 	stomp_frame_free(f); 
-	scs_clear(stp->buffer);
-}
-
-void stomp_close_connection(stomp *stp)
-{
-	stp->close_handler(stp->sock);
-	scs_free(stp->buffer);
-	free(stp);
+	scs_clear(get_buffer(stp));
 }

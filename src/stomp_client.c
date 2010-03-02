@@ -61,7 +61,7 @@ static void send_frame(int sockfd, stomp_frame * frame)
          error_and_exit("ERROR writing to socket");
 	write(sockfd, '\0', 1);
 
-	free(frame);
+	stomp_frame_free(frame);
 }
 
 static stomp_frame * receive_frame(int sockfd)

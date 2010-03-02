@@ -8,7 +8,14 @@
 extern "C" { 
 #endif                       
 
-stomp_frame *stomp_proto_process(stomp *stp, stomp_frame *f);
+stomp * add_stomp(int sock, send_handler *send_handler, close_handler *close_handler);
+stomp *get_stomp(int client_sock);
+void close_stomp(stomp *stp);	
+
+int get_client_sock(stomp *stp);
+scs *get_buffer(stomp *stp);
+
+void send_response_frame(stomp *stp, stomp_frame *f);
 
 #ifdef __cplusplus 
 } 
