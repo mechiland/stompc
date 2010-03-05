@@ -63,9 +63,14 @@ static void stomp_process(stomp *stp, stomp_frame *f)
 	}
 	else 
 	{
-		if(0 == strcmp(verb, "SEND"))
+		if(0 == strcmp("SEND", verb))
 		{
 			rf = stomp_frame_create("MESSAGE", get_body(f));
+		}
+		else if(0 == strcmp("SUBSCRIBE", verb))
+		{
+			char *dest_name = get_header(f, "destination");
+			subscribe_to_destination(get_client_sock(stp), dest_name);
 		}
 		else
 		{				

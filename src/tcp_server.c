@@ -27,7 +27,6 @@ static void close_client_socket(int sock);
 static int sock;
 int connections[FD_SETSIZE];
 int connection_num = 0;
-static stomp *stomp_machine;
 
 static void handle_fatal_error(const char* message)
 {
@@ -167,7 +166,7 @@ static void handle_new_connection(fd_set *socks)
 	set_non_blocking(client_sock);  
 	                                          
 	// TODO: to handle multiple clients same time, we need store all stomp machines
-	stomp_machine = stomp_create(client_sock, send_data, close_client_socket);
+	stomp_create(client_sock, send_data, close_client_socket);
 }
 
 static void handle_tcp_client(int client_sock) 

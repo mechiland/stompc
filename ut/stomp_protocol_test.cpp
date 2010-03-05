@@ -112,3 +112,24 @@ TEST(should_set_stomp_to_connected_status)
 	
 	close_stomp(stp);
 }
+
+TEST(should_return_null_when_given_null_dest_name)
+{
+	int sock = 106;
+	destination *dest = subscribe_to_destination(sock, NULL);
+	CHECK_EQUAL((destination *)NULL, dest);
+}
+
+TEST(should_return_1_when_subscribed_to_a_destination)
+{
+	int sock = 107;
+	destination *dest = subscribe_to_destination(sock, "new_destination");
+	CHECK_EQUAL(1, is_subscribed_to_destination(sock, dest));
+}
+
+TEST(should_return_0_when_not_subscribed_to_a_destination)
+{
+	int sock = 108;
+	destination *dest = subscribe_to_destination(sock, "another_destination");
+	CHECK_EQUAL(0, is_subscribed_to_destination(107, dest));
+}
