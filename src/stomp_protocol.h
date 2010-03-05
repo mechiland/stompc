@@ -25,6 +25,7 @@ scs *get_buffer(stomp *stp);
 
 destination *subscribe_to_destination(int sock, char *dest_name);
 int is_subscribed_to_destination(int sock, destination *dest);
+void unsubscribe_to_destination(int sock, char *dest_name);
 
 void send_response_frame(stomp *stp, stomp_frame *f);
 

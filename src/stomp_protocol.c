@@ -33,6 +33,7 @@ static void remove_stomp_from_list(int client_sock);
 
 static destination *get_destination_from_list(char *dest_name);
 static void add_destination_to_list(destination *dest);
+static void remove_destination_from_list(int sock, destination *dest);
 
 static void add_subscriber_to_list(int sock, destination *dest);
 
@@ -173,6 +174,18 @@ destination *subscribe_to_destination(int sock, char *dest_name)
 	return dest;
 }
 
+void unsubscribe_to_destination(int sock, char *dest_name)
+{
+	if(dest_name == NULL)
+		return NULL;
+	destination *dest = get_destination_from_list(dest_name);
+	if(dest != NULL)
+	{
+		remove_destination_from_list(sock, dest);
+	}
+	return dest;
+}
+
 int is_subscribed_to_destination(int sock, destination *dest)
 {
 	subscriber *sub = dest->subscriber_list;
@@ -241,4 +254,27 @@ static void add_subscriber_to_list(int sock, destination *dest)
 		prev->next = last;
 		last->next = NULL;
 	}
+}
+
+static void remove_destination_from_list(int sock, destination *dest)
+{
+	subscriber *prev, *next;
+	prev = next = dest->subscriber_list;
+	while(NULL != next && (next->sock != sock)){
+		prev = next;
+		next = prev->next;
+	}
+	
+	if(next == NULL)
+	{
+		return;
+	}	
+	if(prev == next)
+	{
+		dest->subscriber_list = NULL;
+	}
+	else
+	{
+		prev->next = next->next;
+	}	
 }

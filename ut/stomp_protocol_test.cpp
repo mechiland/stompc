@@ -133,3 +133,18 @@ TEST(should_return_0_when_not_subscribed_to_a_destination)
 	destination *dest = subscribe_to_destination(sock, "another_destination");
 	CHECK_EQUAL(0, is_subscribed_to_destination(107, dest));
 }
+
+TEST(should_be_able_to_unsubscribe_a_destination)
+{
+	int sock = 109;
+	destination *dest = subscribe_to_destination(sock, "destination");
+	CHECK_EQUAL(1, is_subscribed_to_destination(sock, dest));
+	
+	unsubscribe_to_destination(sock, "destination");
+	CHECK_EQUAL(0, is_subscribed_to_destination(sock, dest));
+}
+
+TEST(should_not_throw_exception_when_unsubscribe_a_not_existed_destination)
+{	
+	unsubscribe_to_destination(sock, "not_existed_destination");
+}

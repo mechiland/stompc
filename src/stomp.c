@@ -72,6 +72,11 @@ static void stomp_process(stomp *stp, stomp_frame *f)
 			char *dest_name = get_header(f, "destination");
 			subscribe_to_destination(get_client_sock(stp), dest_name);
 		}
+		else if(0 == strcmp("UNSUBSCRIBE", verb))
+		{
+			char *dest_name = get_header(f, "destination");
+			unsubscribe_to_destination(get_client_sock(stp), dest_name);
+		}
 		else
 		{				
 			char *body = malloc(strlen("Header  is not invalid.") + strlen(verb) + 1);
