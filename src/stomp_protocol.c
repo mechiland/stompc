@@ -149,14 +149,10 @@ void send_response_frame_to_destination(char *dest_name, stomp_frame *f)
 {
 	scs *s = stomp_frame_serialize(f);
 	subscriber *sub = get_subscribers_of_destination(dest_name);
-	printf("111\n");
 	while(sub != NULL)
 	{
-		printf("222\n");
 		stomp *stp = get_stomp_of_subscriber(sub);
-		printf("333 to %d\n", stp->sock);
 		send_response_frame_to_stomp(stp, f);
-		printf("444\n");
 		sub = sub->next;
 	}
 }

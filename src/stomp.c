@@ -165,7 +165,7 @@ static stomp_frame *handle_send_frame(stomp *stp, stomp_frame *f)
 	{
 		stomp_frame *frame = create_message_frame(dest_name, get_body(f));
 		send_response_frame_to_destination(dest_name, frame);
-	    stomp_frame_free(f);
+	    stomp_frame_free(frame);
 	}
 	return rf;
 }

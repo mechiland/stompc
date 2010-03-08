@@ -169,7 +169,7 @@ TEST(should_send_frame_when_given_destination)
 	stomp_frame *f = stomp_frame_create("MESSAGE", "this is body message");
 	
 	send_response_frame_to_destination("same_destination", f);
-	CHECK_EQUAL(2, data_sent);
+	CHECK_EQUAL(2, data_sent);Ï
 	
 	close_stomp(stp1);
 	close_stomp(stp2);
