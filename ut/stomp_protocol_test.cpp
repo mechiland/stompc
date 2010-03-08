@@ -88,7 +88,7 @@ TEST(should_send_response_frame_to_client)
 	stomp *stp = add_stomp(sock, stub_send_handler, NULL);
 	stomp_frame *f = stomp_frame_create("CONNECTED", "");
 	
-	send_response_frame(stp, f);
+	send_response_frame_to_stomp(stp, f);
 	CHECK_EQUAL(1, data_sent);
 	
 	close_stomp(stp);
@@ -147,4 +147,31 @@ TEST(should_be_able_to_unsubscribe_a_destination)
 TEST(should_not_throw_exception_when_unsubscribe_a_not_existed_destination)
 {	
 	unsubscribe_to_destination(sock, "not_existed_destination");
+}
+
+static int stub_another_send_handler(int actual_sock, char *actual_buf, int actual_size)
+{
+	data_sent++;
+	return actual_size;
+}   
+
+TEST(should_send_frame_when_given_destination)
+{
+	data_sent = 0;
+	
+	sock = 110;
+	stomp *stp1 = add_stomp(sock, stub_another_send_handler, NULL);
+	subscribe_to_destination(sock, "same_destination");
+	sock = 111;
+	stomp *stp2 = add_stomp(sock, stub_another_send_handler, NULL);
+	subscribe_to_destination(sock, "same_destination");
+	
+	stomp_frame *f = stomp_frame_create("MESSAGE", "this is body message");
+	
+	send_response_frame_to_destination("same_destination", f);
+	CHECK_EQUAL(2, data_sent);
+	
+	close_stomp(stp1);
+	close_stomp(stp2);
+	stomp_frame_free(f);
 }

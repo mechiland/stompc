@@ -118,13 +118,13 @@ TEST(should_close_connection_when_given_disconnect_frame)
 	stomp_close(sock);
 }
 
-TEST(should_send_ERROR_frame_if_received_invalid_header)
+TEST(should_send_ERROR_frame_if_received_invalid_verb)
 {
 	sock = 11;
 	send_connect_frame(sock);
 	
 	data_sent = 0;
-	sent_data = "ERROR\nmessage:invalid header\n\nHeader NOT_SUPPORTED_VERB is not invalid.\0";
+	sent_data = "ERROR\nmessage:invalid verb\n\nHeader NOT_SUPPORTED_VERB is not invalid.\0";
 	sent_data_size = strlen(sent_data) + 1;
 	
 	char *recv_data = "NOT_SUPPORTED_VERB\n\n\0";
@@ -164,5 +164,56 @@ TEST(should_be_able_to_subscribe_to_existed_queue)
 	
 	CHECK_EQUAL(0, data_sent); 
 
+	stomp_close(sock);
+}
+
+TEST(should_send_ERROR_frame_if_subscribe_frame_has_no_destination_header)
+{
+	sock = 14;
+	send_connect_frame(sock);
+	
+	data_sent = 0;
+	sent_data = "ERROR\nmessage:header missed\n\nSubscribe frame should contain a destination header.\0";
+	sent_data_size = strlen(sent_data) + 1;
+	
+	char *recv_data = "SUBSCRIBE\n\n\0";
+	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
+	
+	CHECK_EQUAL(1, data_sent);
+	
+	stomp_close(sock);
+}
+
+TEST(should_send_ERROR_frame_if_unsubscribe_frame_has_no_destination_header)
+{
+	sock = 15;
+	send_connect_frame(sock);
+	
+	data_sent = 0;
+	sent_data = "ERROR\nmessage:header missed\n\nUnsubscribe frame should contain a destination header.\0";
+	sent_data_size = strlen(sent_data) + 1;
+	
+	char *recv_data = "UNSUBSCRIBE\n\n\0";
+	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
+	
+	CHECK_EQUAL(1, data_sent);
+	
+	stomp_close(sock);
+}
+
+TEST(should_send_ERROR_frame_if_send_frame_has_no_destination_header)
+{
+	sock = 16;
+	send_connect_frame(sock);
+	
+	data_sent = 0;
+	sent_data = "ERROR\nmessage:header missed\n\nSend frame should contain a destination header.\0";
+	sent_data_size = strlen(sent_data) + 1;
+	
+	char *recv_data = "SEND\n\n\0";
+	stomp_receive(sock, recv_data, strlen(recv_data) + 1);
+	
+	CHECK_EQUAL(1, data_sent);
+	
 	stomp_close(sock);
 }

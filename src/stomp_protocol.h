@@ -24,10 +24,11 @@ int get_client_sock(stomp *stp);
 scs *get_buffer(stomp *stp);
 
 destination *subscribe_to_destination(int sock, char *dest_name);
-int is_subscribed_to_destination(int sock, destination *dest);
 void unsubscribe_to_destination(int sock, char *dest_name);
+int is_subscribed_to_destination(int sock, destination *dest);
 
-void send_response_frame(stomp *stp, stomp_frame *f);
+void send_response_frame_to_stomp(stomp *stp, stomp_frame *f);
+void send_response_frame_to_destination(char *dest_name, stomp_frame *f);
 
 #ifdef __cplusplus 
 } 

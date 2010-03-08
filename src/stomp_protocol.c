@@ -36,6 +36,8 @@ static void add_destination_to_list(destination *dest);
 static void remove_destination_from_list(int sock, destination *dest);
 
 static void add_subscriber_to_list(int sock, destination *dest);
+static stomp *get_stomp_of_subscriber(subscriber *sub);
+static subscriber *get_subscribers_of_destination(char *dest_name);
 
 stomp *add_stomp(int sock, send_handler *send_handler, close_handler *close_handler)
 {	
@@ -131,7 +133,7 @@ static void remove_stomp_from_list(int client_sock)
 	}
 }
 
-void send_response_frame(stomp *stp, stomp_frame *f)
+void send_response_frame_to_stomp(stomp *stp, stomp_frame *f)
 {
 	scs *s = stomp_frame_serialize(f);
 	int result = stp->send_handler(stp->sock, scs_get_content(s), scs_get_size(s));
@@ -141,6 +143,22 @@ void send_response_frame(stomp *stp, stomp_frame *f)
     	perror("Failed to send response frame data");
     }
 	printf("Send %s response to client %d\n",get_verb(f), stp->sock);
+}
+
+void send_response_frame_to_destination(char *dest_name, stomp_frame *f)
+{
+	scs *s = stomp_frame_serialize(f);
+	subscriber *sub = get_subscribers_of_destination(dest_name);
+	printf("111\n");
+	while(sub != NULL)
+	{
+		printf("222\n");
+		stomp *stp = get_stomp_of_subscriber(sub);
+		printf("333 to %d\n", stp->sock);
+		send_response_frame_to_stomp(stp, f);
+		printf("444\n");
+		sub = sub->next;
+	}
 }
 
 void set_to_connected(stomp *stp)
@@ -161,15 +179,15 @@ destination *subscribe_to_destination(int sock, char *dest_name)
 	if(dest == NULL)
 	{
 		dest = malloc(sizeof(*dest));
-		dest->name = malloc(sizeof(dest_name));
-		memcpy(dest->name, dest_name, strlen(dest_name) + 1);
+		dest->name = malloc(strlen(dest_name) + 1);
+		memcpy(dest->name, dest_name, strlen(dest_name));
 		dest->subscriber_list = NULL;
 		dest->next = NULL;
 		add_destination_to_list(dest);
 	}
 	if(!is_subscribed_to_destination(sock, dest))
 	{
-		add_subscriber_to_list(sock, dest);		
+		add_subscriber_to_list(sock, dest);	
 	}
 	return dest;
 }
@@ -177,13 +195,12 @@ destination *subscribe_to_destination(int sock, char *dest_name)
 void unsubscribe_to_destination(int sock, char *dest_name)
 {
 	if(dest_name == NULL)
-		return NULL;
+		return;
 	destination *dest = get_destination_from_list(dest_name);
 	if(dest != NULL)
 	{
 		remove_destination_from_list(sock, dest);
 	}
-	return dest;
 }
 
 int is_subscribed_to_destination(int sock, destination *dest)
@@ -196,8 +213,33 @@ int is_subscribed_to_destination(int sock, destination *dest)
 			return 1;
 		}
 		sub = sub->next;
-	}	
+	}
 	return 0;
+}
+
+static subscriber *get_subscribers_of_destination(char *dest_name)
+{
+	destination *dest = destination_list;
+	while(dest != NULL)
+	{
+		if(0 == strcmp(dest_name, dest->name))
+		{
+			return dest->subscriber_list;
+		}
+		dest = dest->next;
+	}
+	return NULL;
+}
+
+static stomp *get_stomp_of_subscriber(subscriber *sub)
+{
+	stomp *stp = stomp_list;
+	while(stp != NULL && stp->sock != sub->sock)
+	{
+		stp = stp->next;
+	}
+	
+	return stp;
 }
 
 static destination *get_destination_from_list(char *dest_name)
