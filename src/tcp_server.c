@@ -27,7 +27,6 @@ static void close_client_socket(int sock);
 static int sock;
 int connections[FD_SETSIZE];
 int connection_num = 0;
-static stomp *stomp_machine;
 
 static void handle_fatal_error(const char* message)
 {
@@ -75,6 +74,16 @@ static void set_non_blocking(int sock) {
 	}
 }   
 
+static int bind_to_port(int sock, int port_no){
+	struct sockaddr_in servAddr; 
+	memset(&servAddr, 0, sizeof(servAddr)); 
+	servAddr.sin_family = AF_INET; 
+	servAddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+	servAddr.sin_port = htons(port_no); 
+
+	return bind(sock, (struct sockaddr*) &servAddr, sizeof(servAddr));
+}
+
 static void create_server_sock_and_listen()
 {
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -84,13 +93,7 @@ static void create_server_sock_and_listen()
 	set_reuse_addr();
 	set_non_blocking(sock);	
 
-	struct sockaddr_in servAddr; 
-	memset(&servAddr, 0, sizeof(servAddr)); 
-	servAddr.sin_family = AF_INET; 
-	servAddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servAddr.sin_port = htons(PORT); 
-
-	if (bind(sock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
+	if (bind_to_port(sock, PORT) < 0) {
 		handle_fatal_error("bind() failed"); 
 	}		
 
@@ -151,8 +154,7 @@ static void set_file_descriptors(fd_set *socks)
 		if (connections[i] >= 0) { //TODO: need better way to remove a sock from the array
 			FD_SET(connections[i], socks);		
 		}
-	}		
-
+	}
 }
 
 static void handle_new_connection(fd_set *socks)
@@ -170,7 +172,7 @@ static void handle_new_connection(fd_set *socks)
 	// TODO: to handle multiple clients same time, we need store all stomp machines  
 	// TODO: could use observation pattern or event model to let this tcp_server behave as 
 	// 		 an event machine to be able to support more protocols than just the stomp.
-	stomp_machine = stomp_create(client_sock, send_data, close_client_socket);
+	stomp_create(client_sock, send_data, close_client_socket);
 }
 
 static void handle_tcp_client(int client_sock) 
@@ -187,13 +189,14 @@ static void handle_tcp_client(int client_sock)
 
 		total_bytes_recv += bytes_recv;
 		i++;
-	}            
+	}          
+	buf[total_bytes_recv] = 0;  
 
 	printf("Got %d bytes: %s\n", total_bytes_recv, buf);
 	if (total_bytes_recv <= 0)
 		return;                                           
 
-	stomp_receive(stomp_machine, buf, total_bytes_recv);
+	stomp_receive(client_sock, buf, total_bytes_recv + 1);
 }                          
 
 static int send_data(int sock, char *buf, int size) 
@@ -202,7 +205,7 @@ static int send_data(int sock, char *buf, int size)
 		perror("send frame data failed");
 	}                                         
 	return size;                            
-}            
+}
 
 static void close_client_socket(int sock)
 {

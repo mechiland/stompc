@@ -2,20 +2,24 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "stomp_frame.h"
 
 struct _stomp_frame {
 	char *verb;
+	frame_header *headers;
 	char *body;
 };
 
 static int is_valid_frame(int frame_end, int header_end, int verb_end);
+static void add_headers_to_frame(stomp_frame *frame, char * buf, int header_start, int header_end);
 
 stomp_frame *stomp_frame_create(const char *verb, const char *body)
 {              
 	stomp_frame *f = malloc(sizeof(*f));                
 	f->verb = malloc((strlen(verb) + 1) * sizeof(char));
 	strcpy(f->verb, verb);
+	f->headers = NULL;
 	f->body = malloc((strlen(body) + 1) * sizeof(char));
 	strcpy(f->body, body);
 	
@@ -51,12 +55,12 @@ stomp_frame *stomp_frame_parse(scs *s)
 			verb_end = line_end;
 		}
 		i++;
-	} 
+	}
 
 	if (!is_valid_frame(frame_end, header_end, verb_end)) {
 		return NULL;
 	}
-	     
+		     
 	stomp_frame *f = malloc(sizeof(*f));
 	f->verb = malloc((verb_end + 1) * sizeof(char));
 	memcpy(f->verb, buf, verb_end);
@@ -68,12 +72,39 @@ stomp_frame *stomp_frame_parse(scs *s)
 	memcpy(f->body, buf + body_start, body_len);
 	f->body[body_len] = 0;
 	
+	f->headers = NULL;
+	add_headers_to_frame(f, buf, verb_end + 1, header_end);
+	
 	return f;
 }         
 
+static void add_headers_to_frame(stomp_frame *frame, char * buf, int header_start, int header_end){
+	char *key, *value, *data, *tmp = malloc(header_end - header_start + 1);
+	key = value = data = tmp;
+	int i;
+	char next_char;
+	for(i = header_start; i < header_end; i++){
+		next_char = buf[i];
+		if(next_char == ':'){
+			*data++ = '\0';
+			value = data;
+		}
+		else if(next_char == '\n'){			
+			*data++ = '\0';				
+			add_frame_header(frame, key, value);
+			key = data;
+		}
+		else{
+			*data++ = next_char;
+		}
+	}
+	
+	free(tmp);
+}
+
 static int is_valid_frame(int frame_end, int header_end, int verb_end) {
 	return frame_end >= 0 && header_end >= 0 && verb_end >= 0;
-}   
+}
 
 char *stomp_frame_get_verb(stomp_frame *f)
 {
@@ -86,9 +117,19 @@ char *stomp_frame_get_body(stomp_frame *f)
 }
 
 scs *stomp_frame_serialize(stomp_frame *f)
-{               
+{
 	scs *s = scs_create(f->verb);
-	scs_append(s, "\n\n");
+	scs_append(s, "\n"); // Improve this method as it will reallocate every time when append new string.
+	frame_header *header = f->headers;
+	while(header != NULL){		
+		scs_append(s, header->key);
+		scs_append(s, ":");
+		scs_append(s, header->value);
+		scs_append(s, "\n");
+		header = header->next;
+	}
+	scs_append(s, "\n");
+	
 	scs_append(s, f->body);
 	scs_nappend(s, "\0", 1);
 	return s;
@@ -109,4 +150,45 @@ char *get_verb(stomp_frame *f)
 char *get_body(stomp_frame *f)
 {
 	return f->body;
+}
+
+frame_header * get_headers(stomp_frame *f)
+{
+	return f->headers;
+}
+
+char *get_header(stomp_frame *f, char *header_name)
+{
+	frame_header *headers = get_headers(f);
+	while(headers != NULL){
+		if(strcmp(header_name, headers->key) == 0){
+			return headers->value;
+		}
+		headers = headers->next;
+	}
+	return NULL;
+}
+
+void add_frame_header(stomp_frame *frame, const char *key, const char *value)
+{
+	frame_header *last = malloc(sizeof(*last));
+	last->key = malloc(strlen(key) + 1);
+	strcpy(last->key, key);
+	last->value = malloc(strlen(value) + 1);
+	strcpy(last->value, value);
+
+	frame_header *prev, * next;
+	prev = next = frame->headers;
+	while(next != NULL){
+		prev = next;
+		next = prev->next;
+	}
+	if(prev == NULL){
+		frame->headers = last;
+		frame->headers->next = NULL;
+	}
+	else{
+		prev->next = last;
+		last->next = NULL;	
+	}
 }

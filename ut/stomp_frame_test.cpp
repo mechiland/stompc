@@ -36,8 +36,32 @@ TEST(should_return_frame_if_buf_contain_valid_stomp_frame)
 	stomp_frame *f = create_frame(data, strlen(data) + 1);
 	
 	CHECK_EQUAL("CONNECT", stomp_frame_get_verb(f));
-	CHECK_EQUAL("aaa", stomp_frame_get_body(f));                
+	CHECK_EQUAL("aaa", stomp_frame_get_body(f));      
+	CHECK_EQUAL((frame_header *)NULL, get_headers(f));  
 
+	stomp_frame_free(f);   	
+}
+
+TEST(should_add_frame_headers_if_buf_contains_valid_header)
+{                                                        
+	char *data = "CONNECT\nlogin:name\npasscode:12345\n\naaa\0";                           	
+	stomp_frame *f = create_frame(data, strlen(data) + 1);
+	
+	CHECK_EQUAL("CONNECT", stomp_frame_get_verb(f));
+	CHECK_EQUAL("aaa", stomp_frame_get_body(f));                
+	
+	frame_header * header = get_headers(f);
+	CHECK((frame_header *)NULL != header);  
+	CHECK_EQUAL("login", header->key);  
+	CHECK_EQUAL("name", header->value);  
+	
+	header = header->next;
+	CHECK((frame_header *)NULL != header);  
+	CHECK_EQUAL("passcode", header->key);  
+	CHECK_EQUAL("12345", header->value);  
+	
+	header = header->next;
+	CHECK_EQUAL((frame_header *)NULL, header);
 	stomp_frame_free(f);   	
 }
 
@@ -77,5 +101,99 @@ TEST(should_return_serialized_frame_when_body_is_empty)
 	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));
 		
 	scs_free(s);
+	stomp_frame_free(f);
+}
+
+TEST(should_return_serialized_frame_when_headers_are_not_empty)
+{
+	stomp_frame *f = stomp_frame_create("verb", "body");
+	add_frame_header(f, "key1", "value1");
+	add_frame_header(f, "key2", "value2");
+	scs *s = stomp_frame_serialize(f);   
+		                        
+	char *expected_str = "verb\nkey1:value1\nkey2:value2\n\nbody\0";
+	
+	CHECK_EQUAL(expected_str, scs_get_content(s));
+	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));
+		
+	scs_free(s);
+	stomp_frame_free(f);
+}
+
+TEST(should_return_serialized_frame_when_header_is_destination)
+{
+	stomp_frame *f = stomp_frame_create("SEND", "Just another test");
+	add_frame_header(f, "destination", "/test");
+	scs *s = stomp_frame_serialize(f);   
+		                        
+	char *expected_str = "SEND\ndestination:/test\n\nJust another test\0";
+	
+	CHECK_EQUAL(expected_str, scs_get_content(s));
+	CHECK_EQUAL(strlen(expected_str) + 1, scs_get_size(s));
+		
+	scs_free(s);
+	stomp_frame_free(f);
+}
+
+
+TEST(should_return_empty_headers_when_create_a_new_frame)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	CHECK_EQUAL((frame_header *)NULL, get_headers(f));
+	stomp_frame_free(f);
+}
+
+TEST(should_add_one_frame_header)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key0", "value0");
+	frame_header * header = get_headers(f);
+	CHECK((frame_header *)NULL != header);
+	
+	CHECK_EQUAL("key0", header->key);
+	CHECK_EQUAL("value0", header->value);
+	CHECK_EQUAL((frame_header *)NULL, header->next);
+	stomp_frame_free(f);
+}
+
+TEST(should_add_another_frame_header)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key1", "value1");
+	add_frame_header(f, "key2", "value2");
+	
+	frame_header * header = get_headers(f);
+	CHECK((frame_header *)NULL != header);
+	CHECK_EQUAL("key1", header->key);
+	CHECK_EQUAL("value1", header->value);
+	
+	header = header->next;
+	CHECK_EQUAL("key2", header->key);
+	CHECK_EQUAL("value2", header->value);
+	
+	CHECK_EQUAL((frame_header *)NULL, header->next);
+	stomp_frame_free(f);
+}
+
+TEST(should_return_header_value_when_given_header_key)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	add_frame_header(f, "key1", "value1");
+	add_frame_header(f, "key2", "value2");
+	
+	CHECK_EQUAL("value1", get_header(f, "key1"));
+	CHECK_EQUAL("value2", get_header(f, "key2"));
+	frame_header * header = get_headers(f);
+	CHECK_EQUAL((frame_header *)NULL, header->next->next);
+	
+	stomp_frame_free(f);	
+}
+
+TEST(should_return_NULL_when_given_not_existed_header_key)
+{
+	stomp_frame *f = stomp_frame_create("verb", "");
+	
+	CHECK((char *)NULL == get_header(f, "key"));
+	
 	stomp_frame_free(f);
 }
